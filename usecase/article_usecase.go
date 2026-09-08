@@ -12,13 +12,11 @@ import (
 	"time"
 
 	"github.com/SeladaKeju/article-service.git/domain"
-	"github.com/SeladaKeju/article-service.git/repository"
 )
 
 var (
-	ErrInvalidRequest = errors.New("invalid request")
-	ErrInvalidLimit   = errors.New("invalid limit")
-	ErrInvalidCursor  = errors.New("invalid cursor")
+	ErrInvalidLimit  = errors.New("invalid limit")
+	ErrInvalidCursor = errors.New("invalid cursor")
 )
 
 type CreateArticleInput struct {
@@ -38,7 +36,7 @@ func NewArticleUsecase(store domain.ArticleRepository) *ArticleUsecase {
 func (u *ArticleUsecase) Create(ctx context.Context, input CreateArticleInput) (domain.Article, error) {
 	authorID, valid := domain.NormalizeUUIDv4(strings.TrimSpace(input.AuthorID))
 	if !valid || strings.TrimSpace(input.Title) == "" || strings.TrimSpace(input.Body) == "" {
-		return domain.Article{}, ErrInvalidRequest
+		return domain.Article{}, domain.ErrInvalidArticle
 	}
 
 	id, err := domain.NewUUIDv4()
@@ -53,10 +51,6 @@ func (u *ArticleUsecase) Create(ctx context.Context, input CreateArticleInput) (
 		Body:      input.Body,
 		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
 	})
-}
-
-func IsAuthorNotFound(err error) bool {
-	return errors.Is(err, repository.ErrAuthorNotFound)
 }
 
 type ListArticlesInput struct {

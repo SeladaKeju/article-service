@@ -7,7 +7,7 @@ Acuan: [PRD](PRD.md). Checklist ini mencakup implementasi dan verifikasi; belum 
 - [x] Proyek Go dengan Gin tersedia.
 - [x] Proyek memiliki struktur route dan controller API.
 - [x] PRD tersedia, termasuk keputusan search, author filtering, cursor pagination, dan Docker.
-- [ ] Endpoint artikel, PostgreSQL, migrations, dan konfigurasi Docker belum diimplementasikan.
+- [x] Endpoint artikel, PostgreSQL, migrations, dan konfigurasi Docker telah diimplementasikan.
 
 ## T01 - Tetapkan Kontrak API
 
@@ -21,7 +21,7 @@ Dependensi: tidak ada. Acuan: PRD 4 dan 6.
 
 Selesai jika: tersedia contoh request/response dan aturan input yang bisa langsung dijadikan acuan implementasi dan tes.
 
-Status: selesai. Hasil: [API Contract](API_CONTRACT.md), dengan ringkasan PRD yang sudah diselaraskan. Verifikasi dokumentasi lulus: delapan contoh JSON valid, format UUID/timestamp sesuai, cursor berhasil decode/encode ulang dan cocok dengan artikel terakhir, serta contoh pagination timestamp sama dan hasil kosong konsisten. Endpoint dan tes executable belum diimplementasikan pada T01.
+Status: selesai. Hasil: [API Contract](API_CONTRACT.md), dengan ringkasan PRD yang sudah diselaraskan. Verifikasi dokumentasi lulus: delapan contoh JSON valid, format UUID/timestamp sesuai, cursor berhasil decode/encode ulang dan cocok dengan artikel terakhir, serta contoh pagination timestamp sama dan hasil kosong konsisten. Endpoint dan tes executable diselesaikan pada task berikutnya.
 
 ## T02 - Susun Layer dan Bootstrap
 
@@ -99,37 +99,43 @@ Status: selesai. Handler `GET /articles`, usecase, repository query, cursor enco
 
 Dependensi: T05 dan T06. Acuan: PRD 8 dan 9.
 
-- [ ] Pastikan controller/usecase/repository tidak menyimpan data request dalam mutable state bersama.
-- [ ] Tetapkan batas connection pool dan timeout sebagai konfigurasi; dokumentasikan nilai awal sebagai asumsi, lalu sesuaikan berdasarkan pengukuran.
-- [ ] Verifikasi cancellation/timeout sampai SQL, pelepasan koneksi, dan penanganan error ketika operasi database gagal atau menunggu pool.
-- [ ] Jalankan create dan list/search secara bersamaan; cocokkan ID dari respons create sukses dengan data tersimpan dan periksa tidak ada partial record.
-- [ ] Periksa query plan pada data representatif untuk list, search, author filter, dan kombinasi filter; evaluasi penggunaan index.
-- [ ] Catat ukuran dataset, concurrency, durasi, lingkungan, latency, throughput, serta error selama load check sederhana. Tool tidak wajib k6; tidak ada target performa numerik dari assessment.
+- [x] Pastikan controller/usecase/repository tidak menyimpan data request dalam mutable state bersama.
+- [x] Tetapkan batas connection pool dan timeout sebagai konfigurasi; dokumentasikan nilai awal sebagai asumsi, lalu sesuaikan berdasarkan pengukuran.
+- [x] Verifikasi cancellation/timeout sampai SQL, pelepasan koneksi, dan penanganan error ketika operasi database gagal atau menunggu pool.
+- [x] Jalankan create dan list/search secara bersamaan; cocokkan ID dari respons create sukses dengan data tersimpan dan periksa tidak ada partial record.
+- [x] Periksa query plan pada data representatif untuk list, search, author filter, dan kombinasi filter; evaluasi penggunaan index.
+- [x] Catat ukuran dataset, concurrency, durasi, lingkungan, latency, throughput, serta error selama load check sederhana. Tool tidak wajib k6; tidak ada target performa numerik dari assessment.
 
 Selesai jika: hasil pengujian concurrency dan query terdokumentasi beserta keterbatasannya. Atomic insert tidak diklaim sebagai jaminan idempotency untuk POST yang diulang klien.
+
+Status: selesai. Konfigurasi pool/timeout, integration check concurrency/cancellation, query plan, metrik run lokal, dan keterbatasan ada di [Concurrency and Query Check](CONCURRENCY.md).
 
 ## T08 - Verifikasi Akhir
 
 Dependensi: T04-T07. Acuan: PRD 9 dan 11.
 
-- [ ] Jalankan unit/integration test menggunakan database test terpisah; lengkapi kasus gagal yang belum tercakup pada T05-T07.
-- [ ] Jalankan `go test ./...`, `go vet ./...`, dan `go test -race ./...` pada lingkungan yang mendukung race detector; pastikan tes integrasi benar-benar dijalankan.
-- [ ] Ulangi setup Docker dari lingkungan bersih: konfigurasi, migrations, seed, create, list, search, dan filter.
-- [ ] Buat artikel, recreate container dengan volume tetap dipertahankan, lalu pastikan artikel masih tersedia.
+- [x] Jalankan unit/integration test menggunakan database test terpisah; lengkapi kasus gagal yang belum tercakup pada T05-T07.
+- [x] Jalankan `go test ./...`, `go vet ./...`, dan `go test -race ./...` pada lingkungan yang mendukung race detector; pastikan tes integrasi benar-benar dijalankan.
+- [x] Ulangi setup Docker dari lingkungan bersih: konfigurasi, migrations, seed, create, list, search, dan filter.
+- [x] Buat artikel, recreate container dengan volume tetap dipertahankan, lalu pastikan artikel masih tersedia.
 
 Selesai jika: tes wajib lulus dan setup Docker dapat direproduksi tanpa mengandalkan state lokal tersembunyi.
+
+Status: selesai. Hasil unit/integration, Compose bersih, persistence, dan race detector Linux 64-bit ada di [Final Verification](FINAL_VERIFICATION.md).
 
 ## T09 - Dokumentasi dan Review Submission
 
 Dependensi: T08. Acuan: PRD 3, 5, dan 11.
 
-- [ ] Lengkapi README: prerequisites, Docker setup, environment, migrations/seed, contoh author ID, contoh request, serta cara menjalankan tes.
-- [ ] Catat keputusan API, batas pagination, konfigurasi concurrency, hasil load/query check, dan keterbatasan yang ditemukan.
-- [ ] Jelaskan alur layer, strategi index, dan alasan pemilihan solusi secara singkat.
-- [ ] Ungkapkan bagian yang dibantu AI, termasuk PRD, task breakdown, dan implementasi berikutnya jika menggunakan AI.
-- [ ] Cocokkan hasil dengan seluruh acceptance criteria PRD dan pastikan kandidat dapat menjelaskan kode serta tradeoff-nya.
+- [x] Lengkapi README: prerequisites, Docker setup, environment, migrations/seed, contoh author ID, contoh request, serta cara menjalankan tes.
+- [x] Catat keputusan API, batas pagination, konfigurasi concurrency, hasil load/query check, dan keterbatasan yang ditemukan.
+- [x] Jelaskan alur layer, strategi index, dan alasan pemilihan solusi secara singkat.
+- [x] Ungkapkan bagian yang dibantu AI, termasuk PRD, task breakdown, dan implementasi berikutnya jika menggunakan AI.
+- [x] Cocokkan hasil dengan seluruh acceptance criteria PRD dan pastikan kandidat dapat menjelaskan kode serta tradeoff-nya.
 
 Selesai jika: reviewer bisa menjalankan, menguji, dan memahami proyek dari README; seluruh kebutuhan assessment dan keputusan proyek tercakup.
+
+Status: selesai. README merangkum setup, konfigurasi, author seed, API, migration, test, layer, index, concurrency, batasan, dan pengungkapan bantuan AI; detail verifikasi dirujuk ke dokumen terkait.
 
 ## T10 - Opsional: Load Test k6
 

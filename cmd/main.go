@@ -14,10 +14,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func router(db *sql.DB) *gin.Engine {
+func router(db *sql.DB, timeout time.Duration) *gin.Engine {
 	articleRepository := repository.NewArticleRepository(db)
 	articleUsecase := usecase.NewArticleUsecase(articleRepository)
-	return route.New(controller.NewArticleController(articleUsecase))
+	return route.New(controller.NewArticleController(articleUsecase), timeout)
 }
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 	}
 	defer app.Close()
 
-	if err := router(app.DB).Run(app.Env.Address); err != nil {
+	if err := router(app.DB, app.Env.RequestTimeout).Run(app.Env.Address); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/SeladaKeju/article-service.git/domain"
-	"github.com/SeladaKeju/article-service.git/repository"
 	"github.com/SeladaKeju/article-service.git/usecase"
 	"github.com/gin-gonic/gin"
 )
@@ -82,9 +81,37 @@ func TestCreateArticleRejectsInvalidRequest(t *testing.T) {
 	}
 }
 
+func TestCreateArticleRejectsMalformedInput(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cases := []string{
+		`{`,
+		`null`,
+		`[]`,
+		`{"author_id":null,"title":"title","body":"body"}`,
+		`{"author_id":123,"title":"title","body":"body"}`,
+		`{"author_id":"not-a-uuid","title":"title","body":"body"}`,
+		`{"author_id":"550e8400-e29b-41d4-a716-446655440000","title":"title"}`,
+		`{"author_id":"550e8400-e29b-41d4-a716-446655440000","title":"title","body":"body"}{}`,
+	}
+
+	for _, body := range cases {
+		store := &articleStoreStub{}
+		router := gin.New()
+		router.POST("/articles", NewArticleController(usecase.NewArticleUsecase(store)).Create)
+
+		request := httptest.NewRequest(http.MethodPost, "/articles", strings.NewReader(body))
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+
+		if response.Code != http.StatusBadRequest || store.article.ID != "" || !strings.Contains(response.Body.String(), `"invalid_request"`) {
+			t.Fatalf("body = %q, status = %d, stored = %#v, response = %s", body, response.Code, store.article, response.Body.String())
+		}
+	}
+}
+
 func TestCreateArticleReportsMissingAuthor(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	store := &articleStoreStub{err: repository.ErrAuthorNotFound}
+	store := &articleStoreStub{err: domain.ErrAuthorNotFound}
 	router := gin.New()
 	router.POST("/articles", NewArticleController(usecase.NewArticleUsecase(store)).Create)
 

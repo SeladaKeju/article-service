@@ -45,11 +45,11 @@ func (a ArticleController) Create(c *gin.Context) {
 		Title:    *request.Title,
 		Body:     *request.Body,
 	})
-	if errors.Is(err, usecase.ErrInvalidRequest) {
+	if errors.Is(err, domain.ErrInvalidArticle) {
 		writeError(c, http.StatusBadRequest, "invalid_request", "author_id, title, and body must not be blank")
 		return
 	}
-	if usecase.IsAuthorNotFound(err) {
+	if errors.Is(err, domain.ErrAuthorNotFound) {
 		writeError(c, http.StatusBadRequest, "author_not_found", "author was not found")
 		return
 	}

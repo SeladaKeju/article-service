@@ -16,7 +16,7 @@ func App(ctx context.Context) (*Application, error) {
 		return nil, err
 	}
 
-	db, err := NewDatabase(ctx, env.DatabaseURL)
+	db, err := NewDatabase(ctx, env.DatabaseURL, env.DBMaxOpenConns, env.DBMaxIdleConns)
 	if err != nil {
 		return nil, err
 	}

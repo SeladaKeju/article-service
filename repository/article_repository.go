@@ -10,8 +10,6 @@ import (
 	"github.com/SeladaKeju/article-service.git/domain"
 )
 
-var ErrAuthorNotFound = errors.New("author not found")
-
 type ArticleRepository struct {
 	db *sql.DB
 }
@@ -32,7 +30,10 @@ func (r *ArticleRepository) Create(ctx context.Context, article domain.Article) 
 		&created.ID, &created.AuthorID, &created.Title, &created.Body, &created.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return domain.Article{}, ErrAuthorNotFound
+		return domain.Article{}, domain.ErrAuthorNotFound
+	}
+	if err == nil {
+		created.CreatedAt = created.CreatedAt.UTC()
 	}
 	return created, err
 }
@@ -86,6 +87,7 @@ func (r *ArticleRepository) List(ctx context.Context, params domain.ListArticles
 		if err := rows.Scan(&a.ID, &a.AuthorID, &a.Title, &a.Body, &a.CreatedAt); err != nil {
 			return nil, err
 		}
+		a.CreatedAt = a.CreatedAt.UTC()
 		articles = append(articles, a)
 	}
 	return articles, rows.Err()

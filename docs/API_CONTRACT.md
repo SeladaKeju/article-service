@@ -1,6 +1,6 @@
 # Kontrak API Artikel
 
-Hasil T01, mengacu pada [PRD](PRD.md) dan [task breakdown](TASK_BREAKDOWN.md). Dokumen ini menetapkan kontrak untuk implementasi berikutnya; endpoint artikel belum diimplementasikan. Detail format, validasi, dan pagination merupakan keputusan/asumsi proyek, bukan requirement tambahan dari assessment. Penyusunan dokumen dibantu AI.
+Hasil T01, mengacu pada [PRD](PRD.md) dan [task breakdown](TASK_BREAKDOWN.md). Kontrak ini diterapkan oleh endpoint artikel. Detail format, validasi, dan pagination merupakan keputusan/asumsi proyek, bukan requirement tambahan dari assessment. Penyusunan dokumen dibantu AI.
 
 ## 1. Format Umum
 
@@ -9,7 +9,7 @@ Hasil T01, mengacu pada [PRD](PRD.md) dan [task breakdown](TASK_BREAKDOWN.md). D
 - Artikel memiliki tepat lima field: `id`, `author_id`, `title`, `body`, dan `created_at`. Nama author tidak disertakan.
 - ID artikel dan author adalah string [UUID v4](https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4), dikirim dalam bentuk lowercase berhipen dan disimpan sebagai `text`, sesuai diagram assessment. UUID input berhipen boleh menggunakan huruf kapital; normalisasikan ke lowercase setelah validasi.
 - Server menghasilkan ID artikel dan `created_at`. Timestamp disimpan sebagai waktu UTC dan dikirim dalam [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339.html) dengan tepat enam digit pecahan detik dan akhiran `Z`. Respons dan cursor menggunakan nilai timestamp yang benar-benar tersimpan.
-- Author sudah tersedia melalui seed. ID/nama seed pada contoh di bawah adalah data contoh yang perlu disiapkan pada T03, bukan data yang sudah tersedia sekarang.
+- Author tersedia melalui migration seed `000003`. ID/nama seed pada contoh di bawah tersedia setelah migrations dijalankan.
 
 ## 2. Create Article
 

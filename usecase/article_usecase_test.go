@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/SeladaKeju/article-service.git/domain"
-	"github.com/SeladaKeju/article-service.git/repository"
 )
 
 type mockStore struct {
@@ -76,15 +75,15 @@ func TestArticleUsecaseCreateValidationErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := uc.Create(context.Background(), tt.input)
-			if !errors.Is(err, ErrInvalidRequest) {
-				t.Fatalf("got err = %v, want ErrInvalidRequest", err)
+			if !errors.Is(err, domain.ErrInvalidArticle) {
+				t.Fatalf("got err = %v, want ErrInvalidArticle", err)
 			}
 		})
 	}
 }
 
 func TestArticleUsecaseCreateAuthorNotFound(t *testing.T) {
-	store := &mockStore{err: repository.ErrAuthorNotFound}
+	store := &mockStore{err: domain.ErrAuthorNotFound}
 	uc := NewArticleUsecase(store)
 
 	input := CreateArticleInput{
@@ -94,8 +93,8 @@ func TestArticleUsecaseCreateAuthorNotFound(t *testing.T) {
 	}
 
 	_, err := uc.Create(context.Background(), input)
-	if !IsAuthorNotFound(err) {
-		t.Fatalf("got err = %v, want author not found", err)
+	if !errors.Is(err, domain.ErrAuthorNotFound) {
+		t.Fatalf("got err = %v, want ErrAuthorNotFound", err)
 	}
 }
 
@@ -114,7 +113,7 @@ func TestArticleUsecaseListValidation(t *testing.T) {
 
 	invalidCursors := []string{
 		"invalid-base64!!!",
-		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00Z"}`)), // missing id
+		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00Z"}`)),         // missing id
 		base64.RawURLEncoding.EncodeToString([]byte(`{"id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}`)), // missing created_at
 		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00.123456Z","id":"not-uuid"}`)),
 		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00.123Z","id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}`)), // wrong subsecond precision

@@ -1,0 +1,17 @@
+# Build and test artifacts
+bin/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

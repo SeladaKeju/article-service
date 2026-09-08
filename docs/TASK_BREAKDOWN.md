@@ -49,19 +49,21 @@ Dependensi: T01. Acuan: PRD 5 dan 6.
 
 Selesai jika: schema dapat disiapkan ulang secara terkontrol, author seed tersedia, dan database menolak referensi author yang tidak valid.
 
-Status: implementasi selesai. Schema dan seed ada di `migrations/`; langkah penerapan/reset dan ID author seed ada di [Database Setup](DATABASE_SETUP.md). Search/index migrations tetap menjadi T06. Uji SQL terhadap PostgreSQL nyata perlu dijalankan saat Docker Desktop/database tersedia.
+Status: selesai. Schema dan seed ada di `migrations/`; langkah penerapan/reset dan ID author seed ada di [Database Setup](DATABASE_SETUP.md). PostgreSQL melalui Compose berhasil menerapkan migration 1–3, membuat dua author seed, dan rerun migrator menghasilkan `no change`. Search/index migrations tetap menjadi T06.
 
 ## T04 - Docker dan Setup Lokal
 
 Dependensi: T02 dan T03. Acuan: PRD 5 dan 11.
 
-- [ ] Buat `Dockerfile` untuk membangun dan menjalankan API serta `.dockerignore` untuk mengecualikan file yang tidak diperlukan dan rahasia lokal.
-- [ ] Buat `compose.yaml` dengan service `api` dan `db`, koneksi antarservice, serta named volume PostgreSQL.
-- [ ] Tambahkan database healthcheck dan dependency `service_healthy` sebelum API dimulai.
-- [ ] Sediakan `.env.example`; pastikan kredensial nyata tidak masuk image atau Git.
-- [ ] Dokumentasikan konfigurasi, persiapan schema/seed, `docker compose up --build`, dan shutdown. Jangan bergantung pada penghapusan volume untuk menerapkan migrations berikutnya.
+- [x] Buat `Dockerfile` untuk membangun dan menjalankan API serta `.dockerignore` untuk mengecualikan file yang tidak diperlukan dan rahasia lokal.
+- [x] Buat `compose.yaml` dengan service `api` dan `db`, koneksi antarservice, serta named volume PostgreSQL.
+- [x] Tambahkan database healthcheck dan dependency `service_healthy` sebelum API dimulai.
+- [x] Sediakan `.env.example`; pastikan kredensial nyata tidak masuk image atau Git.
+- [x] Dokumentasikan konfigurasi, persiapan schema/seed, `docker compose up --build`, dan shutdown. Jangan bergantung pada penghapusan volume untuk menerapkan migrations berikutnya.
 
 Selesai jika: API dan database dapat dijalankan lewat Compose mengikuti petunjuk setup, dan endpoint health dapat diakses.
+
+Status: selesai. Compose menjalankan `db`, migrator satu-kali, dan `api`; database sehat, migration/seed sukses, rerun migrator aman, dan `GET /health` mengembalikan `200`.
 
 ## T05 - Implementasi Create Article
 

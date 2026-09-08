@@ -47,7 +47,7 @@ The agreed T01 details and examples are defined in [API Contract](API_CONTRACT.m
 
 **Assumption - stack:** Retain Gin; use PostgreSQL, a Go SQL driver, parameterized queries, and SQL migrations.
 
-**Assumptions - Docker setup:** Use two services (`api`, `db`), a named volume for PostgreSQL data, and environment-based configuration with `.env.example`. Keep real credentials out of images and Git. Wait for the database healthcheck before starting the API using Compose's `service_healthy` dependency condition ([Docker reference](https://docs.docker.com/compose/how-tos/startup-order/)). Document configuration, SQL migration/author-seed steps, startup with `docker compose up --build`, and shutdown in the README.
+**Assumptions - Docker setup:** Use `db`, `migrate`, and `api` services, a named volume for PostgreSQL data, and environment-based configuration with `.env.example`. Keep real credentials out of images and Git. The migrator waits for the database healthcheck; the API waits for migration completion. Document configuration, migration/author-seed steps, startup with `docker compose up --build`, applying later migrations without deleting the volume, and shutdown in the README.
 
 ## 6. Data Model
 

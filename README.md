@@ -49,6 +49,8 @@ GET /articles?query=go&author=alice&limit=1&cursor=<next_cursor>
 
 Keep the same filters with `next_cursor`; restart without a cursor when any filter changes. The full request, response, error, cursor, and pagination contract is in [API Contract](docs/API_CONTRACT.md).
 
+Swagger UI is available at `http://localhost:8080/swagger/index.html` after the API starts. The generated OpenAPI files are under `docs/swagger/`; regenerate them after changing annotations with `go generate ./cmd`.
+
 ## Database and architecture
 
 Migrations live in `migrations/` and are applied automatically by Compose. For a later numbered `.up.sql` migration:
@@ -59,7 +61,25 @@ docker compose run --rm migrate
 
 `docker compose down` stops the stack while keeping database data. `docker compose down -v` is an intentional destructive local reset. See [Database Setup](docs/DATABASE_SETUP.md) for details.
 
-Request flow is `Route -> Controller -> Usecase -> Repository -> PostgreSQL`. Controllers handle HTTP, use cases hold application rules, and repositories contain parameterized SQL. PostgreSQL full-text search uses `simple` configuration with a GIN index; lower-cased author-name and cursor-order indexes support the remaining filters. This keeps search, ordering, and pagination in the database without adding an ORM or separate search service.
+Project folder structure:
+
+```text
+article-service/
+├── cmd/                  # Application entry point
+├── bootstrap/            # Environment, database connection, and app wiring
+├── api/
+│   ├── route/            # HTTP route registration
+│   ├── controller/       # HTTP requests and JSON responses
+│   └── middleware/       # Request timeout
+├── usecase/              # Application and business rules
+├── repository/           # PostgreSQL access and parameterized SQL
+├── domain/               # Article types, errors, and UUID helpers
+├── migrations/           # Database schema, indexes, and author seeds
+└── docs/                 # Project and API documentation
+    └── swagger/          # Generated Swagger documentation
+```
+
+Controllers handle HTTP, use cases hold application rules, and repositories contain parameterized SQL. PostgreSQL full-text search uses `simple` configuration with a GIN index; lower-cased author-name and cursor-order indexes support the remaining filters. This keeps search, ordering, and pagination in the database without adding an ORM or separate search service.
 
 ## Tests and operational notes
 

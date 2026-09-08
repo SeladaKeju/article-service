@@ -19,13 +19,13 @@ func NewArticleController(usecase *usecase.ArticleUsecase) ArticleController {
 	return ArticleController{usecase: usecase}
 }
 
-type createArticleRequest struct {
-	AuthorID *string `json:"author_id"`
-	Title    *string `json:"title"`
-	Body     *string `json:"body"`
+type CreateArticleRequest struct {
+	AuthorID *string `json:"author_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Title    *string `json:"title" binding:"required" example:"Go Concurrency"`
+	Body     *string `json:"body" binding:"required" example:"Concurrent requests in Go."`
 }
 
-type articleResponse struct {
+type ArticleResponse struct {
 	ID        string `json:"id"`
 	AuthorID  string `json:"author_id"`
 	Title     string `json:"title"`
@@ -33,6 +33,36 @@ type articleResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
+type articleResponse = ArticleResponse
+
+type ArticleEnvelope struct {
+	Data ArticleResponse `json:"data"`
+}
+
+type ArticlesEnvelope struct {
+	Data       []ArticleResponse `json:"data"`
+	NextCursor *string           `json:"next_cursor" example:"eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"`
+}
+
+type ErrorDetail struct {
+	Code    string `json:"code" example:"invalid_request"`
+	Message string `json:"message" example:"request must contain author_id, title, and body"`
+}
+
+type ErrorEnvelope struct {
+	Error ErrorDetail `json:"error"`
+}
+
+// Create creates an article for an existing author.
+// @Summary Create an article
+// @Tags articles
+// @Accept json
+// @Produce json
+// @Param article body CreateArticleRequest true "Article payload"
+// @Success 201 {object} ArticleEnvelope
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /articles [post]
 func (a ArticleController) Create(c *gin.Context) {
 	request, err := decodeCreateArticle(c.Request)
 	if err != nil || request.AuthorID == nil || request.Title == nil || request.Body == nil {
@@ -61,6 +91,18 @@ func (a ArticleController) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": presentArticle(article)})
 }
 
+// List returns articles newest first, optionally filtered by keyword and author.
+// @Summary List articles
+// @Tags articles
+// @Produce json
+// @Param query query string false "Whole-word search across title and body"
+// @Param author query string false "Full author name, case-insensitive"
+// @Param limit query int false "Results per page (1-100, default 20)"
+// @Param cursor query string false "Cursor returned by the previous page"
+// @Success 200 {object} ArticlesEnvelope
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /articles [get]
 func (a ArticleController) List(c *gin.Context) {
 	result, err := a.usecase.List(c.Request.Context(), usecase.ListArticlesInput{
 		Query:  c.Query("query"),
@@ -81,7 +123,7 @@ func (a ArticleController) List(c *gin.Context) {
 		return
 	}
 
-	data := make([]articleResponse, 0, len(result.Articles))
+	data := make([]ArticleResponse, 0, len(result.Articles))
 	for _, item := range result.Articles {
 		data = append(data, presentArticle(item))
 	}
@@ -92,22 +134,22 @@ func (a ArticleController) List(c *gin.Context) {
 	})
 }
 
-func decodeCreateArticle(request *http.Request) (createArticleRequest, error) {
+func decodeCreateArticle(request *http.Request) (CreateArticleRequest, error) {
 	decoder := json.NewDecoder(request.Body)
 	decoder.DisallowUnknownFields()
 
-	var value createArticleRequest
+	var value CreateArticleRequest
 	if err := decoder.Decode(&value); err != nil {
-		return createArticleRequest{}, err
+		return CreateArticleRequest{}, err
 	}
 	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
-		return createArticleRequest{}, errors.New("request must contain one JSON object")
+		return CreateArticleRequest{}, errors.New("request must contain one JSON object")
 	}
 	return value, nil
 }
 
-func presentArticle(article domain.Article) articleResponse {
-	return articleResponse{
+func presentArticle(article domain.Article) ArticleResponse {
+	return ArticleResponse{
 		ID:        article.ID,
 		AuthorID:  article.AuthorID,
 		Title:     article.Title,

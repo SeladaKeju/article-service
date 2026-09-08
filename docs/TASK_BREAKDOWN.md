@@ -69,13 +69,15 @@ Status: selesai. Compose menjalankan `db`, migrator satu-kali, dan `api`; databa
 
 Dependensi: T01-T04. Acuan: PRD 4 dan 6.
 
-- [ ] Hubungkan `POST /articles` dari route sampai repository.
-- [ ] Validasi input dan petakan author tidak ditemukan menjadi error sesuai kontrak.
-- [ ] Simpan artikel dengan SQL berparameter dan satu INSERT atomic; kirim `201` setelah penyimpanan berhasil.
-- [ ] Teruskan request context hingga operasi database dan gunakan data request lokal.
-- [ ] Tambahkan tes create sukses, persistensi data, input tidak valid, dan author tidak ditemukan.
+- [x] Hubungkan `POST /articles` dari route sampai repository.
+- [x] Validasi input dan petakan author tidak ditemukan menjadi error sesuai kontrak.
+- [x] Simpan artikel dengan SQL berparameter dan satu INSERT atomic; kirim `201` setelah penyimpanan berhasil.
+- [x] Teruskan request context hingga operasi database dan gunakan data request lokal.
+- [x] Tambahkan tes create sukses, persistensi data, input tidak valid, dan author tidak ditemukan.
 
 Selesai jika: artikel yang berhasil dibuat tersimpan dengan ID/timestamp dan respons sesuai kontrak; request tidak valid tidak membuat artikel.
+
+Status: selesai. Handler `POST /articles`, usecase, dan repository terhubung dengan validasi UUID/field, query parameterized atomic insert dengan check author, error mapping 400 (`invalid_request` & `author_not_found`), serta unit and integration tests.
 
 ## T06 - List, Search, Filter, dan Pagination
 

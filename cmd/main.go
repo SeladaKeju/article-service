@@ -2,17 +2,22 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"time"
 
 	"github.com/SeladaKeju/article-service.git/api/controller"
 	"github.com/SeladaKeju/article-service.git/api/route"
 	"github.com/SeladaKeju/article-service.git/bootstrap"
+	"github.com/SeladaKeju/article-service.git/repository"
+	"github.com/SeladaKeju/article-service.git/usecase"
 	"github.com/gin-gonic/gin"
 )
 
-func router() *gin.Engine {
-	return route.New(controller.HealthController{})
+func router(db *sql.DB) *gin.Engine {
+	articleRepository := repository.NewArticleRepository(db)
+	articleUsecase := usecase.NewArticleUsecase(articleRepository)
+	return route.New(controller.HealthController{}, controller.NewArticleController(articleUsecase))
 }
 
 func main() {
@@ -29,7 +34,7 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := router().Run(config.Address); err != nil {
+	if err := router(db).Run(config.Address); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -1,6 +1,6 @@
 # Article Service
 
-Go article service backed by PostgreSQL. The current API exposes `GET /health`; article endpoints are implemented in later tasks.
+Go article service backed by PostgreSQL.
 
 ## Run with Docker
 
@@ -11,7 +11,7 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Compose starts PostgreSQL, waits for its healthcheck, runs SQL migrations and author seeds, then starts the API. Check health at `http://localhost:8080/health`.
+Compose starts PostgreSQL, waits for its healthcheck, runs SQL migrations and author seeds, then starts the API at `http://localhost:8080`.
 
 PostgreSQL is available from the host at `localhost:5434` (`article_service` / `article`); its container port remains `5432`.
 

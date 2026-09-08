@@ -43,7 +43,7 @@ The agreed T01 details and examples are defined in [API Contract](API_CONTRACT.m
 - Use a widely used database/search engine; access the database through SQL queries, without an ORM.
 - Include unit and/or integration tests.
 - **Project requirement:** Provide a `Dockerfile` for the API and `compose.yaml` to run the API and PostgreSQL locally. Docker Compose is optional in the assessment but selected for this project by the owner.
-- Disclose AI assistance; the candidate remains responsible for quality and understanding. This PRD, task breakdown, API contract, and existing health endpoint/test were AI-assisted.
+- Disclose AI assistance; the candidate remains responsible for quality and understanding. This PRD, task breakdown, API contract, and implementation work were AI-assisted.
 
 **Assumption - stack:** Retain Gin; use PostgreSQL, a Go SQL driver, parameterized queries, and SQL migrations.
 
@@ -92,9 +92,9 @@ Efficient large-volume access, accurate search/filtering, and reliable concurren
 
 **Proposed checks:** Use Go's testing tools and HTTP test utilities for creation, newest-first ordering, title/body search, author and combined filters, empty results, validation, and pagination with tied timestamps.
 
-Integration-test persistence, SQL search, and concurrent creates/reads: successful inserts persist once without partial records. Run the race detector where supported and a representative load/query-plan check. Retain the existing health smoke test.
+Integration-test persistence, SQL search, and concurrent creates/reads: successful inserts persist once without partial records. Run the race detector where supported and a representative load/query-plan check.
 
-Verify Docker setup from a fresh environment, including migrations and seeded authors, then check health/create/list endpoints. Confirm stored articles survive container recreation while retaining the database volume.
+Verify Docker setup from a fresh environment, including migrations and seeded authors, then check create/list endpoints. Confirm stored articles survive container recreation while retaining the database volume.
 
 ## 10. Non-Goals
 

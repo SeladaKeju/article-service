@@ -5,7 +5,7 @@ Acuan: [PRD](PRD.md). Checklist ini mencakup implementasi dan verifikasi; belum 
 ## Kondisi Awal
 
 - [x] Proyek Go dengan Gin tersedia.
-- [x] Endpoint `GET /health` dan file tesnya tersedia.
+- [x] Proyek memiliki struktur route dan controller API.
 - [x] PRD tersedia, termasuk keputusan search, author filtering, cursor pagination, dan Docker.
 - [ ] Endpoint artikel, PostgreSQL, migrations, dan konfigurasi Docker belum diimplementasikan.
 
@@ -31,11 +31,11 @@ Dependensi: T01. Acuan: PRD 5 dan 7.
 - [x] Gunakan alur Route → Controller → Usecase → Repository → Database dengan dependency wiring langsung.
 - [x] Definisikan model Article/Author dan kontrak yang diperlukan; HTTP tetap di controller, SQL di repository.
 - [x] Muat konfigurasi environment dan buat satu connection pool PostgreSQL yang dipakai bersama; tangani kegagalan startup dan tutup resource saat shutdown.
-- [x] Tambahkan driver SQL PostgreSQL, rapikan dependensi yang tidak dipakai, dan pertahankan health endpoint beserta tesnya.
+- [x] Tambahkan driver SQL PostgreSQL dan rapikan dependensi yang tidak dipakai.
 
-Selesai jika: aplikasi dapat dijalankan dengan konfigurasi database dan health test tetap lulus setelah perubahan struktur.
+Selesai jika: aplikasi dapat dijalankan dengan konfigurasi database setelah perubahan struktur.
 
-Status: selesai. Route dan controller menangani health; bootstrap memuat `DATABASE_URL`/`ADDRESS` lalu membuka satu pool PostgreSQL. `domain` menyediakan model awal; folder layer artikel dibuat saat T05/T06 agar tidak menjadi scaffold kosong.
+Status: selesai. Bootstrap memuat `DATABASE_URL`/`ADDRESS` lalu membuka satu pool PostgreSQL. Route, controller, usecase, dan repository artikel dibuat saat mulai digunakan.
 
 ## T03 - Schema, Migrations, dan Seed Author
 
@@ -61,9 +61,9 @@ Dependensi: T02 dan T03. Acuan: PRD 5 dan 11.
 - [x] Sediakan `.env.example`; pastikan kredensial nyata tidak masuk image atau Git.
 - [x] Dokumentasikan konfigurasi, persiapan schema/seed, `docker compose up --build`, dan shutdown. Jangan bergantung pada penghapusan volume untuk menerapkan migrations berikutnya.
 
-Selesai jika: API dan database dapat dijalankan lewat Compose mengikuti petunjuk setup, dan endpoint health dapat diakses.
+Selesai jika: API dan database dapat dijalankan lewat Compose mengikuti petunjuk setup.
 
-Status: selesai. Compose menjalankan `db`, migrator satu-kali, dan `api`; database sehat, migration/seed sukses, rerun migrator aman, dan `GET /health` mengembalikan `200`.
+Status: selesai. Compose menjalankan `db`, migrator satu-kali, dan `api`; database sehat, migration/seed sukses, dan rerun migrator aman.
 
 ## T05 - Implementasi Create Article
 
@@ -83,15 +83,17 @@ Status: selesai. Handler `POST /articles`, usecase, dan repository terhubung den
 
 Dependensi: T05. Acuan: PRD 4 dan 8.
 
-- [ ] Implementasikan `GET /articles` dengan urutan `created_at DESC, id DESC` dan daftar kosong saat tidak ada hasil.
-- [ ] Terapkan full-text search title/body dengan konfigurasi `simple`, pencocokan semua kata, dan SQL berparameter.
-- [ ] Terapkan pencocokan penuh nama author tanpa membedakan kapitalisasi; dua author bernama sama tetap dapat menghasilkan artikel masing-masing.
-- [ ] Gabungkan search dan author filter menggunakan AND, termasuk saat mengambil halaman lanjutan.
-- [ ] Terapkan limit dan cursor berdasarkan pasangan timestamp/ID; cursor tidak valid ditolak. Klien mengulang dari halaman pertama saat mengganti filter.
-- [ ] Tambahkan migrations index GIN untuk search, `lower(authors.name)`, urutan artikel, dan `(author_id, created_at, id)` sesuai PRD.
-- [ ] Uji title-only/body-only match, beberapa kata lintas field, non-match substring, variasi kapitalisasi, filter gabungan, timestamp sama, dan halaman terakhir.
+- [x] Implementasikan `GET /articles` dengan urutan `created_at DESC, id DESC` dan daftar kosong saat tidak ada hasil.
+- [x] Terapkan full-text search title/body dengan konfigurasi `simple`, pencocokan semua kata, dan SQL berparameter.
+- [x] Terapkan pencocokan penuh nama author tanpa membedakan kapitalisasi; dua author bernama sama tetap dapat menghasilkan artikel masing-masing.
+- [x] Gabungkan search dan author filter menggunakan AND, termasuk saat mengambil halaman lanjutan.
+- [x] Terapkan limit dan cursor berdasarkan pasangan timestamp/ID; cursor tidak valid ditolak. Klien mengulang dari halaman pertama saat mengganti filter.
+- [x] Tambahkan migrations index GIN untuk search, `lower(authors.name)`, urutan artikel, dan `(author_id, created_at, id)` sesuai PRD.
+- [x] Uji title-only/body-only match, beberapa kata lintas field, non-match substring, variasi kapitalisasi, filter gabungan, timestamp sama, dan halaman terakhir.
 
 Selesai jika: hasil sesuai filter, tetap newest-first, dan pagination tidak mengulang atau melewatkan artikel pada dataset tetap. Perilaku live feed saat ada insert baru terdokumentasi.
+
+Status: selesai. Handler `GET /articles`, usecase, repository query, cursor encoder/decoder, serta migration 000004 untuk index GIN, lower(name), dan pagination terimplementasi beserta unit dan integration tests.
 
 ## T07 - Verifikasi Concurrency dan Query
 
@@ -112,7 +114,7 @@ Dependensi: T04-T07. Acuan: PRD 9 dan 11.
 
 - [ ] Jalankan unit/integration test menggunakan database test terpisah; lengkapi kasus gagal yang belum tercakup pada T05-T07.
 - [ ] Jalankan `go test ./...`, `go vet ./...`, dan `go test -race ./...` pada lingkungan yang mendukung race detector; pastikan tes integrasi benar-benar dijalankan.
-- [ ] Ulangi setup Docker dari lingkungan bersih: konfigurasi, migrations, seed, health, create, list, search, dan filter.
+- [ ] Ulangi setup Docker dari lingkungan bersih: konfigurasi, migrations, seed, create, list, search, dan filter.
 - [ ] Buat artikel, recreate container dengan volume tetap dipertahankan, lalu pastikan artikel masih tersedia.
 
 Selesai jika: tes wajib lulus dan setup Docker dapat direproduksi tanpa mengandalkan state lokal tersembunyi.
@@ -124,7 +126,7 @@ Dependensi: T08. Acuan: PRD 3, 5, dan 11.
 - [ ] Lengkapi README: prerequisites, Docker setup, environment, migrations/seed, contoh author ID, contoh request, serta cara menjalankan tes.
 - [ ] Catat keputusan API, batas pagination, konfigurasi concurrency, hasil load/query check, dan keterbatasan yang ditemukan.
 - [ ] Jelaskan alur layer, strategi index, dan alasan pemilihan solusi secara singkat.
-- [ ] Ungkapkan bagian yang dibantu AI, termasuk PRD, task breakdown, health endpoint/test, dan implementasi berikutnya jika menggunakan AI.
+- [ ] Ungkapkan bagian yang dibantu AI, termasuk PRD, task breakdown, dan implementasi berikutnya jika menggunakan AI.
 - [ ] Cocokkan hasil dengan seluruh acceptance criteria PRD dan pastikan kandidat dapat menjelaskan kode serta tradeoff-nya.
 
 Selesai jika: reviewer bisa menjalankan, menguji, dan memahami proyek dari README; seluruh kebutuhan assessment dan keputusan proyek tercakup.

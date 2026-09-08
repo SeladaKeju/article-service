@@ -16,8 +16,9 @@ import (
 )
 
 type articleStoreStub struct {
-	article domain.Article
-	err     error
+	article    domain.Article
+	err        error
+	listReturn []domain.Article
 }
 
 func (s *articleStoreStub) Create(_ context.Context, article domain.Article) (domain.Article, error) {
@@ -26,6 +27,13 @@ func (s *articleStoreStub) Create(_ context.Context, article domain.Article) (do
 		return domain.Article{}, s.err
 	}
 	return article, nil
+}
+
+func (s *articleStoreStub) List(_ context.Context, _ domain.ListArticlesParams) ([]domain.Article, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.listReturn, nil
 }
 
 func TestCreateArticle(t *testing.T) {
@@ -86,5 +94,59 @@ func TestCreateArticleReportsMissingAuthor(t *testing.T) {
 
 	if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), `"author_not_found"`) {
 		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestListArticlesSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	store := &articleStoreStub{
+		listReturn: []domain.Article{
+			{ID: "3fa85f64-5717-4562-b3fc-2c963f66afa6", AuthorID: "550e8400-e29b-41d4-a716-446655440000", Title: "Title", Body: "Body", CreatedAt: now},
+		},
+	}
+	router := gin.New()
+	ctrl := NewArticleController(usecase.NewArticleUsecase(store))
+	router.GET("/articles", ctrl.List)
+
+	req := httptest.NewRequest(http.MethodGet, "/articles?query=title&author=alice&limit=10", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var resp struct {
+		Data       []articleResponse `json:"data"`
+		NextCursor *string           `json:"next_cursor"`
+	}
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Data) != 1 || resp.NextCursor != nil {
+		t.Fatalf("unexpected resp: %#v", resp)
+	}
+}
+
+func TestListArticlesInvalidLimitAndCursor(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	store := &articleStoreStub{}
+	router := gin.New()
+	ctrl := NewArticleController(usecase.NewArticleUsecase(store))
+	router.GET("/articles", ctrl.List)
+
+	req := httptest.NewRequest(http.MethodGet, "/articles?limit=invalid", nil)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"invalid_limit"`) {
+		t.Fatalf("invalid limit resp = %d %s", rec.Code, rec.Body.String())
+	}
+
+	req = httptest.NewRequest(http.MethodGet, "/articles?cursor=bad", nil)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"invalid_cursor"`) {
+		t.Fatalf("invalid cursor resp = %d %s", rec.Code, rec.Body.String())
 	}
 }

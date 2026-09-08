@@ -5,9 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func New(health controller.HealthController, article controller.ArticleController) *gin.Engine {
+func New(article controller.ArticleController) *gin.Engine {
 	r := gin.Default()
-	r.GET("/health", health.Get)
 	r.POST("/articles", article.Create)
+	r.GET("/articles", article.List)
 	return r
 }

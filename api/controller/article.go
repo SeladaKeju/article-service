@@ -61,6 +61,37 @@ func (a ArticleController) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": presentArticle(article)})
 }
 
+func (a ArticleController) List(c *gin.Context) {
+	result, err := a.usecase.List(c.Request.Context(), usecase.ListArticlesInput{
+		Query:  c.Query("query"),
+		Author: c.Query("author"),
+		Limit:  c.Query("limit"),
+		Cursor: c.Query("cursor"),
+	})
+	if errors.Is(err, usecase.ErrInvalidLimit) {
+		writeError(c, http.StatusBadRequest, "invalid_limit", "limit must be an integer between 1 and 100")
+		return
+	}
+	if errors.Is(err, usecase.ErrInvalidCursor) {
+		writeError(c, http.StatusBadRequest, "invalid_cursor", "cursor is invalid")
+		return
+	}
+	if err != nil {
+		writeError(c, http.StatusInternalServerError, "internal_error", "An internal error occurred")
+		return
+	}
+
+	data := make([]articleResponse, 0, len(result.Articles))
+	for _, item := range result.Articles {
+		data = append(data, presentArticle(item))
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":        data,
+		"next_cursor": result.NextCursor,
+	})
+}
+
 func decodeCreateArticle(request *http.Request) (createArticleRequest, error) {
 	decoder := json.NewDecoder(request.Body)
 	decoder.DisallowUnknownFields()

@@ -2,16 +2,20 @@ package usecase
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/SeladaKeju/article-service.git/domain"
 	"github.com/SeladaKeju/article-service.git/repository"
 )
 
 type mockStore struct {
-	created domain.Article
-	err     error
+	created    domain.Article
+	err        error
+	listParams domain.ListArticlesParams
+	listReturn []domain.Article
 }
 
 func (m *mockStore) Create(_ context.Context, a domain.Article) (domain.Article, error) {
@@ -20,6 +24,14 @@ func (m *mockStore) Create(_ context.Context, a domain.Article) (domain.Article,
 		return domain.Article{}, m.err
 	}
 	return a, nil
+}
+
+func (m *mockStore) List(_ context.Context, params domain.ListArticlesParams) ([]domain.Article, error) {
+	m.listParams = params
+	if m.err != nil {
+		return nil, m.err
+	}
+	return m.listReturn, nil
 }
 
 func TestArticleUsecaseCreateSuccess(t *testing.T) {
@@ -84,5 +96,67 @@ func TestArticleUsecaseCreateAuthorNotFound(t *testing.T) {
 	_, err := uc.Create(context.Background(), input)
 	if !IsAuthorNotFound(err) {
 		t.Fatalf("got err = %v, want author not found", err)
+	}
+}
+
+func TestArticleUsecaseListValidation(t *testing.T) {
+	uc := NewArticleUsecase(&mockStore{})
+
+	invalidLimits := []string{"0", "-1", "101", "1.5", "abc"}
+	for _, l := range invalidLimits {
+		t.Run("limit_"+l, func(t *testing.T) {
+			_, err := uc.List(context.Background(), ListArticlesInput{Limit: l})
+			if !errors.Is(err, ErrInvalidLimit) {
+				t.Fatalf("got %v, want ErrInvalidLimit for limit %q", err, l)
+			}
+		})
+	}
+
+	invalidCursors := []string{
+		"invalid-base64!!!",
+		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00Z"}`)), // missing id
+		base64.RawURLEncoding.EncodeToString([]byte(`{"id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}`)), // missing created_at
+		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00.123456Z","id":"not-uuid"}`)),
+		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00.123Z","id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}`)), // wrong subsecond precision
+		base64.RawURLEncoding.EncodeToString([]byte(`{"created_at":"2026-09-08T12:00:00.123456Z","id":"3fa85f64-5717-4562-b3fc-2c963f66afa6","extra":1}`)),
+	}
+	for _, c := range invalidCursors {
+		t.Run("cursor", func(t *testing.T) {
+			_, err := uc.List(context.Background(), ListArticlesInput{Cursor: c})
+			if !errors.Is(err, ErrInvalidCursor) {
+				t.Fatalf("got %v, want ErrInvalidCursor for cursor %q", err, c)
+			}
+		})
+	}
+}
+
+func TestArticleUsecaseListPagination(t *testing.T) {
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	store := &mockStore{
+		listReturn: []domain.Article{
+			{ID: "3fa85f64-5717-4562-b3fc-2c963f66afa6", AuthorID: "550e8400-e29b-41d4-a716-446655440000", Title: "A1", Body: "B1", CreatedAt: now},
+			{ID: "2fa85f64-5717-4562-b3fc-2c963f66afa6", AuthorID: "550e8400-e29b-41d4-a716-446655440000", Title: "A2", Body: "B2", CreatedAt: now},
+		},
+	}
+	uc := NewArticleUsecase(store)
+
+	res, err := uc.List(context.Background(), ListArticlesInput{Limit: "1"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(res.Articles) != 1 {
+		t.Fatalf("articles count = %d, want 1", len(res.Articles))
+	}
+	if res.NextCursor == nil {
+		t.Fatal("expected next_cursor, got nil")
+	}
+
+	decoded, err := base64.RawURLEncoding.DecodeString(*res.NextCursor)
+	if err != nil {
+		t.Fatalf("cursor decode err: %v", err)
+	}
+	expectedPayload := `{"created_at":"` + now.Format("2006-01-02T15:04:05.000000Z") + `","id":"3fa85f64-5717-4562-b3fc-2c963f66afa6"}`
+	if string(decoded) != expectedPayload {
+		t.Fatalf("decoded cursor = %s, want %s", string(decoded), expectedPayload)
 	}
 }

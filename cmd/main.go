@@ -17,24 +17,19 @@ import (
 func router(db *sql.DB) *gin.Engine {
 	articleRepository := repository.NewArticleRepository(db)
 	articleUsecase := usecase.NewArticleUsecase(articleRepository)
-	return route.New(controller.HealthController{}, controller.NewArticleController(articleUsecase))
+	return route.New(controller.NewArticleController(articleUsecase))
 }
 
 func main() {
-	config, err := bootstrap.LoadConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	db, err := bootstrap.OpenDatabase(ctx, config.DatabaseURL)
+	app, err := bootstrap.App(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer app.Close()
 
-	if err := router(db).Run(config.Address); err != nil {
+	if err := router(app.DB).Run(app.Env.Address); err != nil {
 		log.Fatal(err)
 	}
 }

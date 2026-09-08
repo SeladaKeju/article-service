@@ -13,6 +13,8 @@ docker compose up --build
 
 Compose starts PostgreSQL, waits for its healthcheck, runs SQL migrations and author seeds, then starts the API. Check health at `http://localhost:8080/health`.
 
+PostgreSQL is available from the host at `localhost:5434` (`article_service` / `article`); its container port remains `5432`.
+
 Stop containers with `docker compose down`. This preserves PostgreSQL data. Use `docker compose down -v` only when intentionally resetting local data.
 
 ## Apply Later Migrations

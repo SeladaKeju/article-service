@@ -41,13 +41,15 @@ Status: selesai. Route dan controller menangani health; bootstrap memuat `DATABA
 
 Dependensi: T01. Acuan: PRD 5 dan 6.
 
-- [ ] Buat SQL migrations untuk `authors(id text, name text)` dan `articles(id text, author_id text, title text, body text, created_at timestamp)`.
-- [ ] Tambahkan primary key dan foreign key `articles.author_id → authors.id`; jangan menganggap nama author unik.
-- [ ] Terapkan pembuatan ID/timestamp sesuai kontrak serta constraint untuk field yang wajib diisi.
-- [ ] Sediakan seed author dengan ID yang terdokumentasi dan bisa dijalankan ulang tanpa menggandakan author seed.
-- [ ] Dokumentasikan urutan menjalankan migrations dan seed pada database kosong maupun database yang sudah berisi data.
+- [x] Buat SQL migrations untuk `authors(id text, name text)` dan `articles(id text, author_id text, title text, body text, created_at timestamp)`.
+- [x] Tambahkan primary key dan foreign key `articles.author_id → authors.id`; jangan menganggap nama author unik.
+- [x] Terapkan pembuatan ID/timestamp sesuai kontrak serta constraint untuk field yang wajib diisi.
+- [x] Sediakan seed author dengan ID yang terdokumentasi dan bisa dijalankan ulang tanpa menggandakan author seed.
+- [x] Dokumentasikan urutan menjalankan migrations dan seed pada database kosong maupun database yang sudah berisi data.
 
 Selesai jika: schema dapat disiapkan ulang secara terkontrol, author seed tersedia, dan database menolak referensi author yang tidak valid.
+
+Status: implementasi selesai. Schema dan seed ada di `migrations/`; langkah penerapan/reset dan ID author seed ada di [Database Setup](DATABASE_SETUP.md). Search/index migrations tetap menjadi T06. Uji SQL terhadap PostgreSQL nyata perlu dijalankan saat Docker Desktop/database tersedia.
 
 ## T04 - Docker dan Setup Lokal
 

@@ -35,15 +35,15 @@ type ArticleResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// ArticleEnvelope wraps one article response.
-type ArticleEnvelope struct {
-	Data ArticleResponse `json:"data"`
+// ListArticlesMeta contains pagination metadata for an article list.
+type ListArticlesMeta struct {
+	NextCursor *string `json:"next_cursor" example:"eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"`
 }
 
-// ArticlesEnvelope wraps a page of article responses.
-type ArticlesEnvelope struct {
-	Data       []ArticleResponse `json:"data"`
-	NextCursor *string           `json:"next_cursor" example:"eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"`
+// ListArticlesResponse contains an article page and its pagination metadata.
+type ListArticlesResponse struct {
+	Items []ArticleResponse `json:"items"`
+	Meta  ListArticlesMeta  `json:"meta"`
 }
 
 // ErrorDetail describes an API error.
@@ -52,20 +52,15 @@ type ErrorDetail struct {
 	Message string `json:"message" example:"request must contain author_id, title, and body"`
 }
 
-// ErrorEnvelope wraps an API error response.
-type ErrorEnvelope struct {
-	Error ErrorDetail `json:"error"`
-}
-
 // Create creates an article for an existing author.
 // @Summary Create an article
 // @Tags articles
 // @Accept json
 // @Produce json
 // @Param article body CreateArticleRequest true "Article payload"
-// @Success 201 {object} ArticleEnvelope
-// @Failure 400 {object} ErrorEnvelope
-// @Failure 500 {object} ErrorEnvelope
+// @Success 201 {object} ArticleResponse
+// @Failure 400 {object} ErrorDetail
+// @Failure 500 {object} ErrorDetail
 // @Router /articles [post]
 func (a ArticleController) Create(c *gin.Context) {
 	var request CreateArticleRequest
@@ -92,7 +87,7 @@ func (a ArticleController) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, ArticleEnvelope{Data: presentArticle(article)})
+	c.JSON(http.StatusCreated, presentArticle(article))
 }
 
 // List returns articles newest first, optionally filtered by keyword and author.
@@ -103,9 +98,9 @@ func (a ArticleController) Create(c *gin.Context) {
 // @Param author query string false "Full author name, case-insensitive"
 // @Param limit query int false "Results per page (1-100, default 20)"
 // @Param cursor query string false "Cursor returned by the previous page"
-// @Success 200 {object} ArticlesEnvelope
-// @Failure 400 {object} ErrorEnvelope
-// @Failure 500 {object} ErrorEnvelope
+// @Success 200 {object} ListArticlesResponse
+// @Failure 400 {object} ErrorDetail
+// @Failure 500 {object} ErrorDetail
 // @Router /articles [get]
 func (a ArticleController) List(c *gin.Context) {
 	result, err := a.usecase.List(c.Request.Context(), usecase.ListArticlesInput{
@@ -132,7 +127,10 @@ func (a ArticleController) List(c *gin.Context) {
 		data = append(data, presentArticle(item))
 	}
 
-	c.JSON(http.StatusOK, ArticlesEnvelope{Data: data, NextCursor: result.NextCursor})
+	c.JSON(http.StatusOK, ListArticlesResponse{
+		Items: data,
+		Meta:  ListArticlesMeta{NextCursor: result.NextCursor},
+	})
 }
 
 // presentArticle formats a domain article for the API response contract.
@@ -146,7 +144,7 @@ func presentArticle(article domain.Article) ArticleResponse {
 	}
 }
 
-// writeError writes the service's standard error envelope.
+// writeError writes the service's standard error response.
 func writeError(c *gin.Context, status int, code, message string) {
-	c.JSON(status, ErrorEnvelope{Error: ErrorDetail{Code: code, Message: message}})
+	c.JSON(status, ErrorDetail{Code: code, Message: message})
 }

@@ -47,7 +47,7 @@ GET /articles?author=alice
 GET /articles?query=go&author=alice&limit=1&cursor=<next_cursor>
 ```
 
-Keep the same filters with `next_cursor`; restart without a cursor when any filter changes. The full request, response, error, cursor, and pagination contract is in [API Contract](docs/API_CONTRACT.md).
+Keep the same filters with `meta.next_cursor`; restart without a cursor when any filter changes. The full request, response, error, cursor, and pagination contract is in [API Contract](docs/API_CONTRACT.md).
 
 Swagger UI is available at `http://localhost:8080/swagger/index.html` after the API starts. The generated OpenAPI files are under `docs/swagger/`; regenerate them after changing annotations with `go generate ./cmd`.
 

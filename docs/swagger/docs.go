@@ -54,19 +54,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.ArticlesEnvelope"
+                            "$ref": "#/definitions/controller.ListArticlesResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/controller.ErrorEnvelope"
+                            "$ref": "#/definitions/controller.ErrorDetail"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/controller.ErrorEnvelope"
+                            "$ref": "#/definitions/controller.ErrorDetail"
                         }
                     }
                 }
@@ -97,19 +97,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/controller.ArticleEnvelope"
+                            "$ref": "#/definitions/controller.ArticleResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/controller.ErrorEnvelope"
+                            "$ref": "#/definitions/controller.ErrorDetail"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/controller.ErrorEnvelope"
+                            "$ref": "#/definitions/controller.ErrorDetail"
                         }
                     }
                 }
@@ -117,14 +117,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controller.ArticleEnvelope": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/controller.ArticleResponse"
-                }
-            }
-        },
         "controller.ArticleResponse": {
             "type": "object",
             "properties": {
@@ -142,21 +134,6 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
-                }
-            }
-        },
-        "controller.ArticlesEnvelope": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/controller.ArticleResponse"
-                    }
-                },
-                "next_cursor": {
-                    "type": "string",
-                    "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"
                 }
             }
         },
@@ -195,11 +172,26 @@ const docTemplate = `{
                 }
             }
         },
-        "controller.ErrorEnvelope": {
+        "controller.ListArticlesMeta": {
             "type": "object",
             "properties": {
-                "error": {
-                    "$ref": "#/definitions/controller.ErrorDetail"
+                "next_cursor": {
+                    "type": "string",
+                    "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"
+                }
+            }
+        },
+        "controller.ListArticlesResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.ArticleResponse"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/controller.ListArticlesMeta"
                 }
             }
         }

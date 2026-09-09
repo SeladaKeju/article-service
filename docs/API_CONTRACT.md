@@ -5,7 +5,7 @@ Hasil T01, mengacu pada [PRD](PRD.md) dan [task breakdown](TASK_BREAKDOWN.md). K
 ## 1. Format Umum
 
 - Request create dan seluruh respons artikel/error menggunakan JSON.
-- Respons sukses menggunakan envelope `data`. Respons list menambahkan `next_cursor`, tanpa total count.
+- Respons create adalah objek artikel langsung. Respons list memakai `items` dan `meta.next_cursor`, tanpa total count.
 - Artikel memiliki tepat lima field: `id`, `author_id`, `title`, `body`, dan `created_at`. Nama author tidak disertakan.
 - ID artikel dan author adalah string [UUID v4](https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4), dikirim dalam bentuk lowercase berhipen dan disimpan sebagai `text`, sesuai diagram assessment. UUID input berhipen boleh menggunakan huruf kapital; normalisasikan ke lowercase setelah validasi.
 - Server menghasilkan ID artikel dan `created_at`. Timestamp disimpan sebagai waktu UTC dan dikirim dalam [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339.html) dengan tepat enam digit pecahan detik dan akhiran `Z`. Respons dan cursor menggunakan nilai timestamp yang benar-benar tersimpan.
@@ -25,7 +25,7 @@ Hasil T01, mengacu pada [PRD](PRD.md) dan [task breakdown](TASK_BREAKDOWN.md). K
 }
 ```
 
-Ketiga field wajib bertipe string dan tidak boleh hilang, `null`, kosong, atau hanya berisi whitespace. Tolak field tambahan, termasuk `id` dan `created_at`, JSON rusak, array, scalar, dan lebih dari satu object JSON dalam satu body.
+Ketiga field wajib bertipe string dan tidak boleh hilang, `null`, kosong, atau hanya berisi whitespace. Field tambahan diabaikan; `id` dan `created_at` tidak ada dalam request DTO dan tetap dibuat oleh server. JSON rusak, array, dan scalar ditolak.
 
 Trim whitespace di tepi `author_id` sebelum validasi UUID v4 dan pencarian author. Untuk title/body, gunakan trim hanya untuk memeriksa apakah isinya kosong; simpan dan kembalikan isi asli tanpa trimming atau perubahan kapitalisasi.
 
@@ -35,13 +35,11 @@ UUID author yang tidak valid menghasilkan `400 invalid_request`. UUID valid yang
 
 ```json
 {
-  "data": {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "author_id": "550e8400-e29b-41d4-a716-446655440000",
-    "title": "Go Concurrency",
-    "body": "Concurrent requests in Go.",
-    "created_at": "2026-09-08T12:00:00.123456Z"
-  }
+  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "author_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Go Concurrency",
+  "body": "Concurrent requests in Go.",
+  "created_at": "2026-09-08T12:00:00.123456Z"
 }
 ```
 
@@ -82,7 +80,7 @@ Respons `200 OK`:
 
 ```json
 {
-  "data": [
+  "items": [
     {
       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "author_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -91,7 +89,9 @@ Respons `200 OK`:
       "created_at": "2026-09-08T12:00:00.123456Z"
     }
   ],
-  "next_cursor": "eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"
+  "meta": {
+    "next_cursor": "eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"
+  }
 }
 ```
 
@@ -108,7 +108,7 @@ Cursor adalah JSON dengan tepat `created_at` dan `id` dari artikel terakhir yang
 
 - Gunakan timestamp persis seperti nilai tersimpan; jangan membulatkannya menjadi detik atau milidetik saat membuat cursor.
 - Halaman berikutnya mengambil pasangan `(created_at, id)` yang lebih kecil daripada pasangan cursor, dengan filter dan urutan yang sama.
-- Ambil maksimal `limit + 1` hasil. Kembalikan maksimal `limit`; buat `next_cursor` dari artikel terakhir yang dikembalikan hanya jika hasil tambahan tersedia.
+- Ambil maksimal `limit + 1` hasil. Kembalikan maksimal `limit`; buat `meta.next_cursor` dari artikel terakhir yang dikembalikan hanya jika hasil tambahan tersedia.
 - Encoding tidak valid, JSON bukan satu object, field hilang/tambahan, tipe salah, timestamp bukan format UTC enam digit di atas, atau ID bukan UUID v4 menghasilkan `400 invalid_cursor`.
 - Cursor berisi posisi, bukan snapshot. Klien mempertahankan filter selama pagination dan memulai dari halaman pertama ketika filter berubah. Filter tidak dimasukkan ke payload cursor.
 - Live feed tidak menjanjikan snapshot lintas request. Refresh dari halaman pertama untuk melihat artikel baru; jaminan tidak ada item terulang/terlewat diuji pada dataset tetap.
@@ -123,7 +123,7 @@ Respons `200 OK`, jika artikel berikut adalah hasil terakhir:
 
 ```json
 {
-  "data": [
+  "items": [
     {
       "id": "2fa85f64-5717-4562-b3fc-2c963f66afa6",
       "author_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -132,7 +132,9 @@ Respons `200 OK`, jika artikel berikut adalah hasil terakhir:
       "created_at": "2026-09-08T12:00:00.123456Z"
     }
   ],
-  "next_cursor": null
+  "meta": {
+    "next_cursor": null
+  }
 }
 ```
 
@@ -140,18 +142,20 @@ Respons `200 OK`, jika artikel berikut adalah hasil terakhir:
 
 Contoh request tanpa kecocokan pada data contoh: `GET /articles?author=Nobody`.
 
-Respons `200 OK`; array selalu `[]`, bukan `null`:
+Respons `200 OK`; `items` selalu `[]`, bukan `null`:
 
 ```json
 {
-  "data": [],
-  "next_cursor": null
+  "items": [],
+  "meta": {
+    "next_cursor": null
+  }
 }
 ```
 
 ## 5. Format Error
 
-Semua error menggunakan envelope `error`, tanpa `data`. Code adalah penanda stabil untuk klien; message merupakan penjelasan singkat. Contoh message tidak mewajibkan wording yang persis sama.
+Semua error langsung menggunakan `code` dan `message`. Code adalah penanda stabil untuk klien; message merupakan penjelasan singkat. Contoh message tidak mewajibkan wording yang persis sama.
 
 | HTTP | Code | Kondisi |
 | --- | --- | --- |
@@ -165,10 +169,8 @@ Contoh `400`, ketika title hanya berisi whitespace:
 
 ```json
 {
-  "error": {
-    "code": "invalid_request",
-    "message": "title must not be blank"
-  }
+  "code": "invalid_request",
+  "message": "title must not be blank"
 }
 ```
 
@@ -176,10 +178,8 @@ Contoh `500`:
 
 ```json
 {
-  "error": {
-    "code": "internal_error",
-    "message": "An internal error occurred"
-  }
+  "code": "internal_error",
+  "message": "An internal error occurred"
 }
 ```
 
@@ -187,9 +187,9 @@ Contoh `500`:
 
 | Skenario | Hasil yang diharapkan |
 | --- | --- |
-| Create valid | 201, envelope data, lima field artikel, ID/timestamp server, data tersimpan |
-| Field hilang/null/tipe salah/whitespace-only/tambahan | 400 invalid_request; tidak ada artikel dibuat |
-| JSON rusak, array/scalar, atau dua object berurutan | 400 invalid_request |
+| Create valid | 201, lima field artikel, ID/timestamp server, data tersimpan |
+| Field hilang/null/tipe salah/whitespace-only | 400 invalid_request; tidak ada artikel dibuat |
+| JSON rusak atau array/scalar | 400 invalid_request |
 | Author ID dengan whitespace tepi atau kapitalisasi UUID berbeda | Trim/normalisasi ID; author yang sama ditemukan |
 | Title/body valid dengan whitespace tepi | Isi asli tetap tersimpan dan dikembalikan |
 | UUID author salah / UUID valid tetapi tidak dikenal | 400 invalid_request / 400 author_not_found |
@@ -204,8 +204,8 @@ Contoh `500`:
 | Cursor round-trip | Timestamp dan ID hasil decode sama dengan artikel terakhir yang dikembalikan |
 | Cursor rusak atau field/timestamp/ID tidak valid | 400 invalid_cursor |
 | Dua artikel bertimestamp sama | ID descending menentukan urutan; halaman berikutnya tidak mengulang artikel pertama |
-| Hasil tepat limit dan tidak ada sisanya / ada satu hasil tambahan | next_cursor null / cursor non-null |
-| Tidak ada hasil | 200 dengan data [] dan next_cursor null |
+| Hasil tepat limit dan tidak ada sisanya / ada satu hasil tambahan | `meta.next_cursor` null / cursor non-null |
+| Tidak ada hasil | 200 dengan `items: []` dan `meta.next_cursor: null` |
 | Create bersamaan dengan pagination | Tidak mengklaim snapshot; refresh memuat artikel baru yang sudah committed |
 | Kegagalan database/internal | 500 internal_error tanpa kebocoran detail SQL |
 

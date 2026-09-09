@@ -1,10 +1,5 @@
 basePath: /
 definitions:
-  controller.ArticleEnvelope:
-    properties:
-      data:
-        $ref: '#/definitions/controller.ArticleResponse'
-    type: object
   controller.ArticleResponse:
     properties:
       author_id:
@@ -16,16 +11,6 @@ definitions:
       id:
         type: string
       title:
-        type: string
-    type: object
-  controller.ArticlesEnvelope:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/controller.ArticleResponse'
-        type: array
-      next_cursor:
-        example: eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ
         type: string
     type: object
   controller.CreateArticleRequest:
@@ -53,10 +38,20 @@ definitions:
         example: request must contain author_id, title, and body
         type: string
     type: object
-  controller.ErrorEnvelope:
+  controller.ListArticlesMeta:
     properties:
-      error:
-        $ref: '#/definitions/controller.ErrorDetail'
+      next_cursor:
+        example: eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ
+        type: string
+    type: object
+  controller.ListArticlesResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/controller.ArticleResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/controller.ListArticlesMeta'
     type: object
 host: localhost:8080
 info:
@@ -90,15 +85,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/controller.ArticlesEnvelope'
+            $ref: '#/definitions/controller.ListArticlesResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/controller.ErrorEnvelope'
+            $ref: '#/definitions/controller.ErrorDetail'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/controller.ErrorEnvelope'
+            $ref: '#/definitions/controller.ErrorDetail'
       summary: List articles
       tags:
       - articles
@@ -118,15 +113,15 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/controller.ArticleEnvelope'
+            $ref: '#/definitions/controller.ArticleResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/controller.ErrorEnvelope'
+            $ref: '#/definitions/controller.ErrorDetail'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/controller.ErrorEnvelope'
+            $ref: '#/definitions/controller.ErrorDetail'
       summary: Create an article
       tags:
       - articles

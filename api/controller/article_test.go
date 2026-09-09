@@ -52,17 +52,15 @@ func TestCreateArticle(t *testing.T) {
 		t.Fatalf("stored article = %#v", store.article)
 	}
 
-	var body struct {
-		Data ArticleResponse `json:"data"`
-	}
+	var body ArticleResponse
 	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
 		t.Fatal(err)
 	}
-	if _, valid := domain.NormalizeUUIDv4(body.Data.ID); !valid {
-		t.Fatalf("id = %q", body.Data.ID)
+	if _, valid := domain.NormalizeUUIDv4(body.ID); !valid {
+		t.Fatalf("id = %q", body.ID)
 	}
-	if _, err := time.Parse("2006-01-02T15:04:05.000000Z", body.Data.CreatedAt); err != nil {
-		t.Fatalf("created_at = %q: %v", body.Data.CreatedAt, err)
+	if _, err := time.Parse("2006-01-02T15:04:05.000000Z", body.CreatedAt); err != nil {
+		t.Fatalf("created_at = %q: %v", body.CreatedAt, err)
 	}
 }
 
@@ -129,13 +127,14 @@ func TestListArticlesSuccess(t *testing.T) {
 	store := &articleStoreStub{
 		listReturn: []domain.Article{
 			{ID: "3fa85f64-5717-4562-b3fc-2c963f66afa6", AuthorID: "550e8400-e29b-41d4-a716-446655440000", Title: "Title", Body: "Body", CreatedAt: now},
+			{ID: "2fa85f64-5717-4562-b3fc-2c963f66afa6", AuthorID: "550e8400-e29b-41d4-a716-446655440000", Title: "Older Title", Body: "Older Body", CreatedAt: now},
 		},
 	}
 	router := gin.New()
 	ctrl := NewArticleController(usecase.NewArticleUsecase(store))
 	router.GET("/articles", ctrl.List)
 
-	req := httptest.NewRequest(http.MethodGet, "/articles?query=title&author=alice&limit=10", nil)
+	req := httptest.NewRequest(http.MethodGet, "/articles?query=title&author=alice&limit=1", nil)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 
@@ -143,14 +142,11 @@ func TestListArticlesSuccess(t *testing.T) {
 		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
 	}
 
-	var resp struct {
-		Data       []ArticleResponse `json:"data"`
-		NextCursor *string           `json:"next_cursor"`
-	}
+	var resp ListArticlesResponse
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
 		t.Fatal(err)
 	}
-	if len(resp.Data) != 1 || resp.NextCursor != nil {
+	if len(resp.Items) != 1 || resp.Meta.NextCursor == nil {
 		t.Fatalf("unexpected resp: %#v", resp)
 	}
 }

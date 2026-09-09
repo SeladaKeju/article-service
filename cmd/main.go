@@ -21,7 +21,7 @@ import (
 // @host localhost:8080
 // @BasePath /
 // @schemes http
-//go:generate go run github.com/swaggo/swag/cmd/swag@v1.16.6 init -g main.go -o ../docs/swagger
+//go:generate go run -mod=mod github.com/swaggo/swag/cmd/swag@v1.16.6 init -g cmd/main.go -d .. -o ../docs/swagger
 
 func router(db *sql.DB, timeout time.Duration) *gin.Engine {
 	articleRepository := repository.NewArticleRepository(db)

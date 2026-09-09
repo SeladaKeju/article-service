@@ -38,8 +38,6 @@ func (r *ArticleRepository) Create(ctx context.Context, article domain.Article) 
 	return created, err
 }
 
-type ListArticlesParams = domain.ListArticlesParams
-
 func (r *ArticleRepository) List(ctx context.Context, params domain.ListArticlesParams) ([]domain.Article, error) {
 	queryStr := `
 		SELECT a.id, a.author_id, a.title, a.body, a.created_at

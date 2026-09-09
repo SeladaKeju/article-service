@@ -103,36 +103,36 @@ func TestArticleRepositoryListFilterAndPagination(t *testing.T) {
 	}
 
 	// Test whole-word search: 'go' matches a1 & a2, but not a3 (Golang/Django)
-	res, err := repo.List(ctx, ListArticlesParams{Query: marker + " go", Limit: 10})
+	res, err := repo.List(ctx, domain.ListArticlesParams{Query: marker + " go", Limit: 10})
 	if err != nil || len(res) != 2 {
 		t.Fatalf("query=go got %d results, err=%v; want 2", len(res), err)
 	}
 
 	// Test author case-insensitive filter
-	res, err = repo.List(ctx, ListArticlesParams{Query: marker, Author: "alice", Limit: 10})
+	res, err = repo.List(ctx, domain.ListArticlesParams{Query: marker, Author: "alice", Limit: 10})
 	if err != nil || len(res) != 2 {
 		t.Fatalf("author=alice got %d results, err=%v; want 2", len(res), err)
 	}
 
 	// Test combined AND filter
-	res, err = repo.List(ctx, ListArticlesParams{Query: marker + " go concurrency", Author: "ALICE", Limit: 10})
+	res, err = repo.List(ctx, domain.ListArticlesParams{Query: marker + " go concurrency", Author: "ALICE", Limit: 10})
 	if err != nil || len(res) != 2 {
 		t.Fatalf("query=go concurrency & author=ALICE got %d results, err=%v", len(res), err)
 	}
 
 	// Test cursor pagination on same timestamp (id2 > id1, so id2 appears first)
-	res, err = repo.List(ctx, ListArticlesParams{Query: marker, Author: "alice", Limit: 1})
+	res, err = repo.List(ctx, domain.ListArticlesParams{Query: marker, Author: "alice", Limit: 1})
 	if err != nil || len(res) != 1 || res[0].ID != id2 {
 		t.Fatalf("page 1 got ID=%s, want %s", res[0].ID, id2)
 	}
 
-	res2, err := repo.List(ctx, ListArticlesParams{Query: marker, Author: "alice", Limit: 1, CursorTime: &res[0].CreatedAt, CursorID: &res[0].ID})
+	res2, err := repo.List(ctx, domain.ListArticlesParams{Query: marker, Author: "alice", Limit: 1, CursorTime: &res[0].CreatedAt, CursorID: &res[0].ID})
 	if err != nil || len(res2) != 1 || res2[0].ID != id1 {
 		t.Fatalf("page 2 got ID=%s, want %s", res2[0].ID, id1)
 	}
 
 	// Empty result
-	res, err = repo.List(ctx, ListArticlesParams{Query: marker, Author: "Nobody", Limit: 10})
+	res, err = repo.List(ctx, domain.ListArticlesParams{Query: marker, Author: "Nobody", Limit: 10})
 	if err != nil || len(res) != 0 {
 		t.Fatalf("author=Nobody got %d results, want 0", len(res))
 	}

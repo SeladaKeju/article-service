@@ -1,9 +1,7 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 
 	"github.com/SeladaKeju/article-service.git/domain"
@@ -32,8 +30,6 @@ type ArticleResponse struct {
 	Body      string `json:"body"`
 	CreatedAt string `json:"created_at"`
 }
-
-type articleResponse = ArticleResponse
 
 type ArticleEnvelope struct {
 	Data ArticleResponse `json:"data"`
@@ -64,8 +60,8 @@ type ErrorEnvelope struct {
 // @Failure 500 {object} ErrorEnvelope
 // @Router /articles [post]
 func (a ArticleController) Create(c *gin.Context) {
-	request, err := decodeCreateArticle(c.Request)
-	if err != nil || request.AuthorID == nil || request.Title == nil || request.Body == nil {
+	var request CreateArticleRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
 		writeError(c, http.StatusBadRequest, "invalid_request", "request must contain author_id, title, and body")
 		return
 	}
@@ -88,7 +84,7 @@ func (a ArticleController) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": presentArticle(article)})
+	c.JSON(http.StatusCreated, ArticleEnvelope{Data: presentArticle(article)})
 }
 
 // List returns articles newest first, optionally filtered by keyword and author.
@@ -128,24 +124,7 @@ func (a ArticleController) List(c *gin.Context) {
 		data = append(data, presentArticle(item))
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"data":        data,
-		"next_cursor": result.NextCursor,
-	})
-}
-
-func decodeCreateArticle(request *http.Request) (CreateArticleRequest, error) {
-	decoder := json.NewDecoder(request.Body)
-	decoder.DisallowUnknownFields()
-
-	var value CreateArticleRequest
-	if err := decoder.Decode(&value); err != nil {
-		return CreateArticleRequest{}, err
-	}
-	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
-		return CreateArticleRequest{}, errors.New("request must contain one JSON object")
-	}
-	return value, nil
+	c.JSON(http.StatusOK, ArticlesEnvelope{Data: data, NextCursor: result.NextCursor})
 }
 
 func presentArticle(article domain.Article) ArticleResponse {
@@ -159,5 +138,5 @@ func presentArticle(article domain.Article) ArticleResponse {
 }
 
 func writeError(c *gin.Context, status int, code, message string) {
-	c.JSON(status, gin.H{"error": gin.H{"code": code, "message": message}})
+	c.JSON(status, ErrorEnvelope{Error: ErrorDetail{Code: code, Message: message}})
 }

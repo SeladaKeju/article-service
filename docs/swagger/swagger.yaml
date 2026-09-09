@@ -1,11 +1,135 @@
 basePath: /
+definitions:
+  controller.ArticleEnvelope:
+    properties:
+      data:
+        $ref: '#/definitions/controller.ArticleResponse'
+    type: object
+  controller.ArticleResponse:
+    properties:
+      author_id:
+        type: string
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  controller.ArticlesEnvelope:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/controller.ArticleResponse'
+        type: array
+      next_cursor:
+        example: eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ
+        type: string
+    type: object
+  controller.CreateArticleRequest:
+    properties:
+      author_id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      body:
+        example: Concurrent requests in Go.
+        type: string
+      title:
+        example: Go Concurrency
+        type: string
+    required:
+    - author_id
+    - body
+    - title
+    type: object
+  controller.ErrorDetail:
+    properties:
+      code:
+        example: invalid_request
+        type: string
+      message:
+        example: request must contain author_id, title, and body
+        type: string
+    type: object
+  controller.ErrorEnvelope:
+    properties:
+      error:
+        $ref: '#/definitions/controller.ErrorDetail'
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: API for creating, listing, searching, and filtering articles.
   title: Article Service API
   version: "1.0"
-paths: {}
+paths:
+  /articles:
+    get:
+      parameters:
+      - description: Whole-word search across title and body
+        in: query
+        name: query
+        type: string
+      - description: Full author name, case-insensitive
+        in: query
+        name: author
+        type: string
+      - description: Results per page (1-100, default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor returned by the previous page
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.ArticlesEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ErrorEnvelope'
+      summary: List articles
+      tags:
+      - articles
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Article payload
+        in: body
+        name: article
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateArticleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/controller.ArticleEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ErrorEnvelope'
+      summary: Create an article
+      tags:
+      - articles
 schemes:
 - http
 swagger: "2.0"

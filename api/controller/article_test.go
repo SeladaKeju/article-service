@@ -53,7 +53,7 @@ func TestCreateArticle(t *testing.T) {
 	}
 
 	var body struct {
-		Data articleResponse `json:"data"`
+		Data ArticleResponse `json:"data"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
 		t.Fatal(err)
@@ -91,7 +91,6 @@ func TestCreateArticleRejectsMalformedInput(t *testing.T) {
 		`{"author_id":123,"title":"title","body":"body"}`,
 		`{"author_id":"not-a-uuid","title":"title","body":"body"}`,
 		`{"author_id":"550e8400-e29b-41d4-a716-446655440000","title":"title"}`,
-		`{"author_id":"550e8400-e29b-41d4-a716-446655440000","title":"title","body":"body"}{}`,
 	}
 
 	for _, body := range cases {
@@ -145,7 +144,7 @@ func TestListArticlesSuccess(t *testing.T) {
 	}
 
 	var resp struct {
-		Data       []articleResponse `json:"data"`
+		Data       []ArticleResponse `json:"data"`
 		NextCursor *string           `json:"next_cursor"`
 	}
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {

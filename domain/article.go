@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-type Author struct {
-	ID   string
-	Name string
-}
-
 type Article struct {
 	ID        string
 	AuthorID  string

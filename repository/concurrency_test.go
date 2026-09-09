@@ -125,7 +125,7 @@ func TestArticleRepositoryHonorsCanceledContext(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if _, err := NewArticleRepository(db).List(ctx, ListArticlesParams{Limit: 1}); err == nil {
+	if _, err := NewArticleRepository(db).List(ctx, domain.ListArticlesParams{Limit: 1}); err == nil {
 		t.Fatal("List() error = nil with canceled context")
 	}
 }

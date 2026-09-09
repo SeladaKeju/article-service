@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// NewUUIDv4 returns a cryptographically random RFC 4122 version 4 UUID.
 func NewUUIDv4() (string, error) {
 	var value [16]byte
 	if _, err := rand.Read(value[:]); err != nil {
@@ -18,6 +19,7 @@ func NewUUIDv4() (string, error) {
 	return encoded[:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:], nil
 }
 
+// NormalizeUUIDv4 lowercases and validates an RFC 4122 version 4 UUID.
 func NormalizeUUIDv4(value string) (string, bool) {
 	value = strings.ToLower(value)
 	if len(value) != 36 || value[8] != '-' || value[13] != '-' || value[18] != '-' || value[23] != '-' || value[14] != '4' || !strings.ContainsRune("89ab", rune(value[19])) {

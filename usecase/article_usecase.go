@@ -15,24 +15,30 @@ import (
 )
 
 var (
-	ErrInvalidLimit  = errors.New("invalid limit")
+	// ErrInvalidLimit indicates an out-of-range or non-numeric page limit.
+	ErrInvalidLimit = errors.New("invalid limit")
+	// ErrInvalidCursor indicates a malformed pagination cursor.
 	ErrInvalidCursor = errors.New("invalid cursor")
 )
 
+// CreateArticleInput contains client-provided data for a new article.
 type CreateArticleInput struct {
 	AuthorID string
 	Title    string
 	Body     string
 }
 
+// ArticleUsecase contains article business rules.
 type ArticleUsecase struct {
 	store domain.ArticleRepository
 }
 
+// NewArticleUsecase constructs article business rules backed by store.
 func NewArticleUsecase(store domain.ArticleRepository) *ArticleUsecase {
 	return &ArticleUsecase{store: store}
 }
 
+// Create validates input, creates server-managed fields, and persists an article.
 func (u *ArticleUsecase) Create(ctx context.Context, input CreateArticleInput) (domain.Article, error) {
 	authorID, valid := domain.NormalizeUUIDv4(strings.TrimSpace(input.AuthorID))
 	if !valid || strings.TrimSpace(input.Title) == "" || strings.TrimSpace(input.Body) == "" {
@@ -53,6 +59,7 @@ func (u *ArticleUsecase) Create(ctx context.Context, input CreateArticleInput) (
 	})
 }
 
+// ListArticlesInput contains HTTP-derived article list parameters.
 type ListArticlesInput struct {
 	Query  string
 	Author string
@@ -60,16 +67,19 @@ type ListArticlesInput struct {
 	Cursor string
 }
 
+// ListArticlesResult contains one page of articles and an optional next cursor.
 type ListArticlesResult struct {
 	Articles   []domain.Article
 	NextCursor *string
 }
 
+// cursorPayload is the opaque value encoded into a pagination cursor.
 type cursorPayload struct {
 	CreatedAt *string `json:"created_at"`
 	ID        *string `json:"id"`
 }
 
+// List validates filters and cursors, then returns a page of articles.
 func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (ListArticlesResult, error) {
 	query := strings.TrimSpace(input.Query)
 	author := strings.TrimSpace(input.Author)
@@ -129,6 +139,7 @@ func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (Lis
 
 	var nextCursor *string
 	if len(articles) > limit {
+		// The repository fetches one extra row solely to determine whether another page exists.
 		lastArticle := articles[limit-1]
 		articles = articles[:limit]
 		payloadBytes, _ := json.Marshal(cursorPayload{
@@ -149,6 +160,7 @@ func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (Lis
 	}, nil
 }
 
+// stringPtr returns a pointer to s for optional response fields.
 func stringPtr(s string) *string {
 	return &s
 }

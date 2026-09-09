@@ -9,20 +9,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ArticleController translates HTTP requests to article use-case calls.
 type ArticleController struct {
 	usecase *usecase.ArticleUsecase
 }
 
+// NewArticleController constructs an article HTTP controller.
 func NewArticleController(usecase *usecase.ArticleUsecase) ArticleController {
 	return ArticleController{usecase: usecase}
 }
 
+// CreateArticleRequest is the accepted JSON payload for creating an article.
 type CreateArticleRequest struct {
 	AuthorID *string `json:"author_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
 	Title    *string `json:"title" binding:"required" example:"Go Concurrency"`
 	Body     *string `json:"body" binding:"required" example:"Concurrent requests in Go."`
 }
 
+// ArticleResponse is the JSON representation of an article.
 type ArticleResponse struct {
 	ID        string `json:"id"`
 	AuthorID  string `json:"author_id"`
@@ -31,20 +35,24 @@ type ArticleResponse struct {
 	CreatedAt string `json:"created_at"`
 }
 
+// ArticleEnvelope wraps one article response.
 type ArticleEnvelope struct {
 	Data ArticleResponse `json:"data"`
 }
 
+// ArticlesEnvelope wraps a page of article responses.
 type ArticlesEnvelope struct {
 	Data       []ArticleResponse `json:"data"`
 	NextCursor *string           `json:"next_cursor" example:"eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"`
 }
 
+// ErrorDetail describes an API error.
 type ErrorDetail struct {
 	Code    string `json:"code" example:"invalid_request"`
 	Message string `json:"message" example:"request must contain author_id, title, and body"`
 }
 
+// ErrorEnvelope wraps an API error response.
 type ErrorEnvelope struct {
 	Error ErrorDetail `json:"error"`
 }
@@ -127,6 +135,7 @@ func (a ArticleController) List(c *gin.Context) {
 	c.JSON(http.StatusOK, ArticlesEnvelope{Data: data, NextCursor: result.NextCursor})
 }
 
+// presentArticle formats a domain article for the API response contract.
 func presentArticle(article domain.Article) ArticleResponse {
 	return ArticleResponse{
 		ID:        article.ID,
@@ -137,6 +146,7 @@ func presentArticle(article domain.Article) ArticleResponse {
 	}
 }
 
+// writeError writes the service's standard error envelope.
 func writeError(c *gin.Context, status int, code, message string) {
 	c.JSON(status, ErrorEnvelope{Error: ErrorDetail{Code: code, Message: message}})
 }

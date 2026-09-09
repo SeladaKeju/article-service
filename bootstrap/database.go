@@ -7,6 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+// NewDatabase opens, configures, and verifies a PostgreSQL connection pool.
 func NewDatabase(ctx context.Context, url string, maxOpenConns, maxIdleConns int) (*sql.DB, error) {
 	db, err := sql.Open("pgx", url)
 	if err != nil {

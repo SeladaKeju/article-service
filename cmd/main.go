@@ -23,6 +23,7 @@ import (
 // @schemes http
 //go:generate go run -mod=mod github.com/swaggo/swag/cmd/swag@v1.16.6 init -g cmd/main.go -d .. -o ../docs/swagger
 
+// router wires concrete dependencies into the HTTP router.
 func router(db *sql.DB, timeout time.Duration) *gin.Engine {
 	articleRepository := repository.NewArticleRepository(db)
 	articleUsecase := usecase.NewArticleUsecase(articleRepository)

@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Env contains validated runtime configuration read from environment variables.
 type Env struct {
 	DatabaseURL    string
 	Address        string
@@ -15,6 +16,7 @@ type Env struct {
 	RequestTimeout time.Duration
 }
 
+// NewEnv reads and validates runtime configuration from environment variables.
 func NewEnv() (*Env, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
@@ -51,6 +53,7 @@ func NewEnv() (*Env, error) {
 	}, nil
 }
 
+// positiveIntEnv returns a positive integer environment value or its fallback.
 func positiveIntEnv(name string, fallback int) (int, error) {
 	value := os.Getenv(name)
 	if value == "" {

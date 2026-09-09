@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Article is an article stored by the service.
 type Article struct {
 	ID        string
 	AuthorID  string
@@ -13,6 +14,7 @@ type Article struct {
 	CreatedAt time.Time
 }
 
+// ListArticlesParams contains repository filters and cursor pagination values.
 type ListArticlesParams struct {
 	Query      string
 	Author     string
@@ -21,6 +23,7 @@ type ListArticlesParams struct {
 	CursorID   *string
 }
 
+// ArticleRepository stores and lists articles.
 type ArticleRepository interface {
 	Create(context.Context, Article) (Article, error)
 	List(context.Context, ListArticlesParams) ([]Article, error)

@@ -10,14 +10,17 @@ import (
 	"github.com/SeladaKeju/article-service.git/domain"
 )
 
+// ArticleRepository implements domain.ArticleRepository with PostgreSQL.
 type ArticleRepository struct {
 	db *sql.DB
 }
 
+// NewArticleRepository constructs a PostgreSQL article repository.
 func NewArticleRepository(db *sql.DB) *ArticleRepository {
 	return &ArticleRepository{db: db}
 }
 
+// Create inserts an article only when its author exists.
 func (r *ArticleRepository) Create(ctx context.Context, article domain.Article) (domain.Article, error) {
 	const query = `
 		INSERT INTO articles (id, author_id, title, body, created_at)
@@ -38,6 +41,7 @@ func (r *ArticleRepository) Create(ctx context.Context, article domain.Article) 
 	return created, err
 }
 
+// List applies optional filters and keyset pagination in descending creation order.
 func (r *ArticleRepository) List(ctx context.Context, params domain.ListArticlesParams) ([]domain.Article, error) {
 	queryStr := `
 		SELECT a.id, a.author_id, a.title, a.body, a.created_at

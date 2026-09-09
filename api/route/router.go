@@ -11,6 +11,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// New registers HTTP routes and middleware for the article API.
 func New(article controller.ArticleController, timeout time.Duration) *gin.Engine {
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {

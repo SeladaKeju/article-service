@@ -49,7 +49,7 @@ func TestArticleRepositoryConcurrentCreateAndList(t *testing.T) {
 		go func(index int) {
 			defer group.Done()
 			operationStarted := time.Now()
-			article, err := articleUsecase.Create(ctx, usecase.CreateArticleInput{
+			article, err := articleUsecase.Create(ctx, domain.Article{
 				AuthorID: "550e8400-e29b-41d4-a716-446655440000",
 				Title:    fmt.Sprintf("%s concurrency %d", marker, index),
 				Body:     "concurrent create verification",
@@ -66,7 +66,7 @@ func TestArticleRepositoryConcurrentCreateAndList(t *testing.T) {
 		go func() {
 			defer group.Done()
 			operationStarted := time.Now()
-			_, err := articleUsecase.List(ctx, usecase.ListArticlesInput{Query: "concurrency", Limit: "100"})
+			_, err := articleUsecase.List(ctx, domain.ListArticlesInput{Query: "concurrency", Limit: "100"})
 			if err != nil {
 				errs <- err
 				return

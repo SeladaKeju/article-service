@@ -1,34 +1,5 @@
 basePath: /
 definitions:
-  controller.ArticleResponse:
-    properties:
-      author_id:
-        type: string
-      body:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: string
-      title:
-        type: string
-    type: object
-  controller.CreateArticleRequest:
-    properties:
-      author_id:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      body:
-        example: Concurrent requests in Go.
-        type: string
-      title:
-        example: Go Concurrency
-        type: string
-    required:
-    - author_id
-    - body
-    - title
-    type: object
   controller.ErrorDetail:
     properties:
       code:
@@ -48,10 +19,27 @@ definitions:
     properties:
       items:
         items:
-          $ref: '#/definitions/controller.ArticleResponse'
+          $ref: '#/definitions/domain.Article'
         type: array
       meta:
         $ref: '#/definitions/controller.ListArticlesMeta'
+    type: object
+  domain.Article:
+    properties:
+      author_id:
+        type: string
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    required:
+    - author_id
+    - body
+    - title
     type: object
 host: localhost:8080
 info:
@@ -106,14 +94,14 @@ paths:
         name: article
         required: true
         schema:
-          $ref: '#/definitions/controller.CreateArticleRequest'
+          $ref: '#/definitions/domain.Article'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/controller.ArticleResponse'
+            $ref: '#/definitions/domain.Article'
         "400":
           description: Bad Request
           schema:

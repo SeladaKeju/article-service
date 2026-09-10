@@ -5,45 +5,29 @@ import (
 	"net/http"
 
 	"github.com/SeladaKeju/article-service.git/domain"
-	"github.com/SeladaKeju/article-service.git/usecase"
 	"github.com/gin-gonic/gin"
 )
 
 // ArticleController translates HTTP requests to article use-case calls.
 type ArticleController struct {
-	usecase *usecase.ArticleUsecase
+	usecase domain.ArticleUsecase
 }
 
 // NewArticleController constructs an article HTTP controller.
-func NewArticleController(usecase *usecase.ArticleUsecase) ArticleController {
+func NewArticleController(usecase domain.ArticleUsecase) ArticleController {
 	return ArticleController{usecase: usecase}
-}
-
-// CreateArticleRequest is the accepted JSON payload for creating an article.
-type CreateArticleRequest struct {
-	AuthorID *string `json:"author_id" binding:"required" example:"550e8400-e29b-41d4-a716-446655440000"`
-	Title    *string `json:"title" binding:"required" example:"Go Concurrency"`
-	Body     *string `json:"body" binding:"required" example:"Concurrent requests in Go."`
-}
-
-// ArticleResponse is the JSON representation of an article.
-type ArticleResponse struct {
-	ID        string `json:"id"`
-	AuthorID  string `json:"author_id"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	CreatedAt string `json:"created_at"`
 }
 
 // ListArticlesMeta contains pagination metadata for an article list.
 type ListArticlesMeta struct {
-	NextCursor *string `json:"next_cursor" example:"eyJjcmVhdGVkX2F0IjoiMjAyNi0wOS0wOFQxMjowMDowMC4xMjM0NTZaIiwiaWQiOiIzZmE4NWY2NC01NzE3LTQ1NjItYjNmYy0yYzk2M2Y2NmFmYTYifQ"`
+	NextCursor *string `json:"next_cursor"`
+	
 }
 
 // ListArticlesResponse contains an article page and its pagination metadata.
 type ListArticlesResponse struct {
-	Items []ArticleResponse `json:"items"`
-	Meta  ListArticlesMeta  `json:"meta"`
+	Items []domain.Article `json:"items"`
+	Meta  ListArticlesMeta `json:"meta"`
 }
 
 // ErrorDetail describes an API error.
@@ -57,23 +41,19 @@ type ErrorDetail struct {
 // @Tags articles
 // @Accept json
 // @Produce json
-// @Param article body CreateArticleRequest true "Article payload"
-// @Success 201 {object} ArticleResponse
+// @Param article body domain.Article true "Article payload"
+// @Success 201 {object} domain.Article
 // @Failure 400 {object} ErrorDetail
 // @Failure 500 {object} ErrorDetail
 // @Router /articles [post]
 func (a ArticleController) Create(c *gin.Context) {
-	var request CreateArticleRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
+	var article domain.Article
+	if err := c.ShouldBindJSON(&article); err != nil {
 		writeError(c, http.StatusBadRequest, "invalid_request", "request must contain author_id, title, and body")
 		return
 	}
 
-	article, err := a.usecase.Create(c.Request.Context(), usecase.CreateArticleInput{
-		AuthorID: *request.AuthorID,
-		Title:    *request.Title,
-		Body:     *request.Body,
-	})
+	article, err := a.usecase.Create(c.Request.Context(), article)
 	if errors.Is(err, domain.ErrInvalidArticle) {
 		writeError(c, http.StatusBadRequest, "invalid_request", "author_id, title, and body must not be blank")
 		return
@@ -87,7 +67,7 @@ func (a ArticleController) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, presentArticle(article))
+	c.JSON(http.StatusCreated, article)
 }
 
 // List returns articles newest first, optionally filtered by keyword and author.
@@ -103,17 +83,17 @@ func (a ArticleController) Create(c *gin.Context) {
 // @Failure 500 {object} ErrorDetail
 // @Router /articles [get]
 func (a ArticleController) List(c *gin.Context) {
-	result, err := a.usecase.List(c.Request.Context(), usecase.ListArticlesInput{
+	result, err := a.usecase.List(c.Request.Context(), domain.ListArticlesInput{
 		Query:  c.Query("query"),
 		Author: c.Query("author"),
 		Limit:  c.Query("limit"),
 		Cursor: c.Query("cursor"),
 	})
-	if errors.Is(err, usecase.ErrInvalidLimit) {
+	if errors.Is(err, domain.ErrInvalidLimit) {
 		writeError(c, http.StatusBadRequest, "invalid_limit", "limit must be an integer between 1 and 100")
 		return
 	}
-	if errors.Is(err, usecase.ErrInvalidCursor) {
+	if errors.Is(err, domain.ErrInvalidCursor) {
 		writeError(c, http.StatusBadRequest, "invalid_cursor", "cursor is invalid")
 		return
 	}
@@ -122,26 +102,10 @@ func (a ArticleController) List(c *gin.Context) {
 		return
 	}
 
-	data := make([]ArticleResponse, 0, len(result.Articles))
-	for _, item := range result.Articles {
-		data = append(data, presentArticle(item))
-	}
-
 	c.JSON(http.StatusOK, ListArticlesResponse{
-		Items: data,
+		Items: result.Articles,
 		Meta:  ListArticlesMeta{NextCursor: result.NextCursor},
 	})
-}
-
-// presentArticle formats a domain article for the API response contract.
-func presentArticle(article domain.Article) ArticleResponse {
-	return ArticleResponse{
-		ID:        article.ID,
-		AuthorID:  article.AuthorID,
-		Title:     article.Title,
-		Body:      article.Body,
-		CreatedAt: article.CreatedAt.UTC().Format("2006-01-02T15:04:05.000000Z"),
-	}
 }
 
 // writeError writes the service's standard error response.

@@ -89,7 +89,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.CreateArticleRequest"
+                            "$ref": "#/definitions/domain.Article"
                         }
                     }
                 ],
@@ -97,7 +97,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/controller.ArticleResponse"
+                            "$ref": "#/definitions/domain.Article"
                         }
                     },
                     "400": {
@@ -117,48 +117,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controller.ArticleResponse": {
-            "type": "object",
-            "properties": {
-                "author_id": {
-                    "type": "string"
-                },
-                "body": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.CreateArticleRequest": {
-            "type": "object",
-            "required": [
-                "author_id",
-                "body",
-                "title"
-            ],
-            "properties": {
-                "author_id": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "body": {
-                    "type": "string",
-                    "example": "Concurrent requests in Go."
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Go Concurrency"
-                }
-            }
-        },
         "controller.ErrorDetail": {
             "type": "object",
             "properties": {
@@ -187,11 +145,36 @@ const docTemplate = `{
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/controller.ArticleResponse"
+                        "$ref": "#/definitions/domain.Article"
                     }
                 },
                 "meta": {
                     "$ref": "#/definitions/controller.ListArticlesMeta"
+                }
+            }
+        },
+        "domain.Article": {
+            "type": "object",
+            "required": [
+                "author_id",
+                "body",
+                "title"
+            ],
+            "properties": {
+                "author_id": {
+                    "type": "string"
+                },
+                "body": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         }

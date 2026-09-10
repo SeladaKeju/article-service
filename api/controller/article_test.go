@@ -41,7 +41,7 @@ func TestCreateArticle(t *testing.T) {
 	router := gin.New()
 	router.POST("/articles", NewArticleController(usecase.NewArticleUsecase(store)).Create)
 
-	request := httptest.NewRequest(http.MethodPost, "/articles", strings.NewReader(`{"author_id":" 550E8400-E29B-41D4-A716-446655440000 ","title":" Go ","body":" Body "}`))
+	request := httptest.NewRequest(http.MethodPost, "/articles", strings.NewReader(`{"id":"00000000-0000-4000-8000-000000000001","author_id":" 550E8400-E29B-41D4-A716-446655440000 ","title":" Go ","body":" Body ","created_at":"2000-01-01T00:00:00Z"}`))
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, request)
 
@@ -52,15 +52,18 @@ func TestCreateArticle(t *testing.T) {
 		t.Fatalf("stored article = %#v", store.article)
 	}
 
-	var body ArticleResponse
+	var body domain.Article
 	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
 		t.Fatal(err)
 	}
 	if _, valid := domain.NormalizeUUIDv4(body.ID); !valid {
 		t.Fatalf("id = %q", body.ID)
 	}
-	if _, err := time.Parse("2006-01-02T15:04:05.000000Z", body.CreatedAt); err != nil {
-		t.Fatalf("created_at = %q: %v", body.CreatedAt, err)
+	if body.ID == "00000000-0000-4000-8000-000000000001" || body.CreatedAt.Year() == 2000 {
+		t.Fatalf("client-controlled server fields: %#v", body)
+	}
+	if body.CreatedAt.IsZero() {
+		t.Fatal("created_at is zero")
 	}
 }
 

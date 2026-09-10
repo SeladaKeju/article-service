@@ -14,34 +14,20 @@ import (
 	"github.com/SeladaKeju/article-service.git/domain"
 )
 
-var (
-	// ErrInvalidLimit indicates an out-of-range or non-numeric page limit.
-	ErrInvalidLimit = errors.New("invalid limit")
-	// ErrInvalidCursor indicates a malformed pagination cursor.
-	ErrInvalidCursor = errors.New("invalid cursor")
-)
-
-// CreateArticleInput contains client-provided data for a new article.
-type CreateArticleInput struct {
-	AuthorID string
-	Title    string
-	Body     string
-}
-
 // ArticleUsecase contains article business rules.
-type ArticleUsecase struct {
+type articleUsecase struct {
 	store domain.ArticleRepository
 }
 
 // NewArticleUsecase constructs article business rules backed by store.
-func NewArticleUsecase(store domain.ArticleRepository) *ArticleUsecase {
-	return &ArticleUsecase{store: store}
+func NewArticleUsecase(store domain.ArticleRepository) domain.ArticleUsecase {
+	return &articleUsecase{store: store}
 }
 
 // Create validates input, creates server-managed fields, and persists an article.
-func (u *ArticleUsecase) Create(ctx context.Context, input CreateArticleInput) (domain.Article, error) {
-	authorID, valid := domain.NormalizeUUIDv4(strings.TrimSpace(input.AuthorID))
-	if !valid || strings.TrimSpace(input.Title) == "" || strings.TrimSpace(input.Body) == "" {
+func (u *articleUsecase) Create(ctx context.Context, article domain.Article) (domain.Article, error) {
+	authorID, valid := domain.NormalizeUUIDv4(strings.TrimSpace(article.AuthorID))
+	if !valid || strings.TrimSpace(article.Title) == "" || strings.TrimSpace(article.Body) == "" {
 		return domain.Article{}, domain.ErrInvalidArticle
 	}
 
@@ -50,27 +36,10 @@ func (u *ArticleUsecase) Create(ctx context.Context, input CreateArticleInput) (
 		return domain.Article{}, err
 	}
 
-	return u.store.Create(ctx, domain.Article{
-		ID:        id,
-		AuthorID:  authorID,
-		Title:     input.Title,
-		Body:      input.Body,
-		CreatedAt: time.Now().UTC().Truncate(time.Microsecond),
-	})
-}
-
-// ListArticlesInput contains HTTP-derived article list parameters.
-type ListArticlesInput struct {
-	Query  string
-	Author string
-	Limit  string
-	Cursor string
-}
-
-// ListArticlesResult contains one page of articles and an optional next cursor.
-type ListArticlesResult struct {
-	Articles   []domain.Article
-	NextCursor *string
+	article.ID = id
+	article.AuthorID = authorID
+	article.CreatedAt = time.Now().UTC().Truncate(time.Microsecond)
+	return u.store.Create(ctx, article)
 }
 
 // cursorPayload is the opaque value encoded into a pagination cursor.
@@ -80,7 +49,7 @@ type cursorPayload struct {
 }
 
 // List validates filters and cursors, then returns a page of articles.
-func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (ListArticlesResult, error) {
+func (u *articleUsecase) List(ctx context.Context, input domain.ListArticlesInput) (domain.ListArticlesResult, error) {
 	query := strings.TrimSpace(input.Query)
 	author := strings.TrimSpace(input.Author)
 
@@ -89,7 +58,7 @@ func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (Lis
 	if trimmedLimit != "" {
 		val, err := strconv.Atoi(trimmedLimit)
 		if err != nil || val < 1 || val > 100 {
-			return ListArticlesResult{}, ErrInvalidLimit
+			return domain.ListArticlesResult{}, domain.ErrInvalidLimit
 		}
 		limit = val
 	}
@@ -100,27 +69,27 @@ func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (Lis
 	if trimmedCursor != "" {
 		decoded, err := base64.RawURLEncoding.DecodeString(trimmedCursor)
 		if err != nil {
-			return ListArticlesResult{}, ErrInvalidCursor
+			return domain.ListArticlesResult{}, domain.ErrInvalidCursor
 		}
 		decoder := json.NewDecoder(bytes.NewReader(decoded))
 		decoder.DisallowUnknownFields()
 		var payload cursorPayload
 		if err := decoder.Decode(&payload); err != nil {
-			return ListArticlesResult{}, ErrInvalidCursor
+			return domain.ListArticlesResult{}, domain.ErrInvalidCursor
 		}
 		if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
-			return ListArticlesResult{}, ErrInvalidCursor
+			return domain.ListArticlesResult{}, domain.ErrInvalidCursor
 		}
 		if payload.CreatedAt == nil || payload.ID == nil {
-			return ListArticlesResult{}, ErrInvalidCursor
+			return domain.ListArticlesResult{}, domain.ErrInvalidCursor
 		}
 		t, err := time.Parse("2006-01-02T15:04:05.000000Z", *payload.CreatedAt)
 		if err != nil || t.Format("2006-01-02T15:04:05.000000Z") != *payload.CreatedAt {
-			return ListArticlesResult{}, ErrInvalidCursor
+			return domain.ListArticlesResult{}, domain.ErrInvalidCursor
 		}
 		normID, valid := domain.NormalizeUUIDv4(*payload.ID)
 		if !valid {
-			return ListArticlesResult{}, ErrInvalidCursor
+			return domain.ListArticlesResult{}, domain.ErrInvalidCursor
 		}
 		cursorTime = &t
 		cursorID = &normID
@@ -134,7 +103,7 @@ func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (Lis
 		CursorID:   cursorID,
 	})
 	if err != nil {
-		return ListArticlesResult{}, err
+		return domain.ListArticlesResult{}, err
 	}
 
 	var nextCursor *string
@@ -154,7 +123,7 @@ func (u *ArticleUsecase) List(ctx context.Context, input ListArticlesInput) (Lis
 		articles = []domain.Article{}
 	}
 
-	return ListArticlesResult{
+	return domain.ListArticlesResult{
 		Articles:   articles,
 		NextCursor: nextCursor,
 	}, nil

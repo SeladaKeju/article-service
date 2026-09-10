@@ -83,14 +83,21 @@ Controllers handle HTTP, use cases hold application rules, and repositories cont
 
 ## Tests and operational notes
 
-Run unit tests and static checks:
+Run unit tests and static checks locally:
 
 ```powershell
 go test ./...
 go vet ./...
 ```
 
-Integration tests require a separate `TEST_DATABASE_URL`; setup, race-detector results, and Compose persistence verification are in [Final Verification](docs/FINAL_VERIFICATION.md). Connection-pool settings, concurrent create/list results, query-plan checks, and known limits are in [Concurrency and Query Check](docs/CONCURRENCY.md).
+Database integration tests are skipped by the local command when `TEST_DATABASE_URL` is not set. Run the complete suite against an isolated, temporary PostgreSQL database with:
+
+```powershell
+docker compose -p article-service-test -f compose.test.yaml run --build --rm test
+docker compose -p article-service-test -f compose.test.yaml down
+```
+
+The first command fails if migrations or any test fails. The second removes only the isolated test containers and network; the test database uses temporary storage and never touches the application database or `postgres_data` volume. Race-detector results and Compose persistence verification are in [Final Verification](docs/FINAL_VERIFICATION.md). Connection-pool settings, concurrent create/list results, query-plan checks, and known limits are in [Concurrency and Query Check](docs/CONCURRENCY.md).
 
 Pagination is a live feed rather than a cross-request snapshot, and repeated `POST` requests are not idempotent. k6, caching, queues, a search cluster, and distributed locks are intentionally out of scope until measurements require them.
 

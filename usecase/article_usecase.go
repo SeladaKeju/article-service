@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/domain"
+	"github.com/SeladaKeju/article-service/domain"
 )
 
 // ArticleUsecase contains article business rules.

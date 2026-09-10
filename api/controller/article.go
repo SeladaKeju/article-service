@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/SeladaKeju/article-service.git/domain"
+	"github.com/SeladaKeju/article-service/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +21,6 @@ func NewArticleController(usecase domain.ArticleUsecase) ArticleController {
 // ListArticlesMeta contains pagination metadata for an article list.
 type ListArticlesMeta struct {
 	NextCursor *string `json:"next_cursor"`
-	
 }
 
 // ListArticlesResponse contains an article page and its pagination metadata.
@@ -36,6 +35,12 @@ type ErrorDetail struct {
 	Message string `json:"message" example:"request must contain author_id, title, and body"`
 }
 
+// InternalErrorDetail documents the generic response for unexpected failures.
+type InternalErrorDetail struct {
+	Code    string `json:"code" example:"internal_error"`
+	Message string `json:"message" example:"An internal error occurred"`
+}
+
 // Create creates an article for an existing author.
 // @Summary Create an article
 // @Tags articles
@@ -44,7 +49,7 @@ type ErrorDetail struct {
 // @Param article body domain.Article true "Article payload"
 // @Success 201 {object} domain.Article
 // @Failure 400 {object} ErrorDetail
-// @Failure 500 {object} ErrorDetail
+// @Failure 500 {object} InternalErrorDetail
 // @Router /articles [post]
 func (a ArticleController) Create(c *gin.Context) {
 	var article domain.Article
@@ -63,6 +68,7 @@ func (a ArticleController) Create(c *gin.Context) {
 		return
 	}
 	if err != nil {
+		c.Error(err)
 		writeError(c, http.StatusInternalServerError, "internal_error", "An internal error occurred")
 		return
 	}
@@ -80,7 +86,7 @@ func (a ArticleController) Create(c *gin.Context) {
 // @Param cursor query string false "Cursor returned by the previous page"
 // @Success 200 {object} ListArticlesResponse
 // @Failure 400 {object} ErrorDetail
-// @Failure 500 {object} ErrorDetail
+// @Failure 500 {object} InternalErrorDetail
 // @Router /articles [get]
 func (a ArticleController) List(c *gin.Context) {
 	result, err := a.usecase.List(c.Request.Context(), domain.ListArticlesInput{
@@ -98,6 +104,7 @@ func (a ArticleController) List(c *gin.Context) {
 		return
 	}
 	if err != nil {
+		c.Error(err)
 		writeError(c, http.StatusInternalServerError, "internal_error", "An internal error occurred")
 		return
 	}

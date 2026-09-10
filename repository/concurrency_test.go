@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/bootstrap"
-	"github.com/SeladaKeju/article-service.git/domain"
-	"github.com/SeladaKeju/article-service.git/usecase"
+	"github.com/SeladaKeju/article-service/bootstrap"
+	"github.com/SeladaKeju/article-service/domain"
+	"github.com/SeladaKeju/article-service/usecase"
 )
 
 func TestArticleRepositoryConcurrentCreateAndList(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/SeladaKeju/article-service.git
+module github.com/SeladaKeju/article-service
 
 go 1.25.0
 

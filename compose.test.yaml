@@ -1,0 +1,35 @@
+services:
+  test-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: article_service_test
+      POSTGRES_USER: article_test
+      POSTGRES_PASSWORD: article_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U article_test -d article_service_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  test-migrate:
+    image: migrate/migrate:v4.19.0
+    depends_on:
+      test-db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations:ro
+    command: ["-path", "/migrations", "-database", "postgres://article_test:article_test@test-db:5432/article_service_test?sslmode=disable", "up"]
+    restart: "no"
+
+  test:
+    build:
+      context: .
+      target: build
+    environment:
+      TEST_DATABASE_URL: postgres://article_test:article_test@test-db:5432/article_service_test?sslmode=disable
+    depends_on:
+      test-migrate:
+        condition: service_completed_successfully
+    command: ["go", "test", "-count=1", "-v", "./..."]

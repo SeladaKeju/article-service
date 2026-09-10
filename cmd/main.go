@@ -6,12 +6,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/api/controller"
-	"github.com/SeladaKeju/article-service.git/api/route"
-	"github.com/SeladaKeju/article-service.git/bootstrap"
-	_ "github.com/SeladaKeju/article-service.git/docs/swagger"
-	"github.com/SeladaKeju/article-service.git/repository"
-	"github.com/SeladaKeju/article-service.git/usecase"
+	"github.com/SeladaKeju/article-service/api/controller"
+	"github.com/SeladaKeju/article-service/api/route"
+	"github.com/SeladaKeju/article-service/bootstrap"
+	_ "github.com/SeladaKeju/article-service/docs/swagger"
+	"github.com/SeladaKeju/article-service/repository"
+	"github.com/SeladaKeju/article-service/usecase"
 	"github.com/gin-gonic/gin"
 )
 

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/domain"
+	"github.com/SeladaKeju/article-service/domain"
 )
 
 type mockStore struct {

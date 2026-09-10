@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/api/controller"
+	"github.com/SeladaKeju/article-service/api/controller"
 )
 
 func TestSwaggerDirectoryRedirectsToIndex(t *testing.T) {

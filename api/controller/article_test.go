@@ -3,14 +3,15 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/domain"
-	"github.com/SeladaKeju/article-service.git/usecase"
+	"github.com/SeladaKeju/article-service/domain"
+	"github.com/SeladaKeju/article-service/usecase"
 	"github.com/gin-gonic/gin"
 )
 
@@ -121,6 +122,46 @@ func TestCreateArticleReportsMissingAuthor(t *testing.T) {
 
 	if response.Code != http.StatusBadRequest || !strings.Contains(response.Body.String(), `"author_not_found"`) {
 		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestInternalErrorsAreRecordedWithoutLeaking(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	internalErr := errors.New("database unavailable")
+	store := &articleStoreStub{err: internalErr}
+	controller := NewArticleController(usecase.NewArticleUsecase(store))
+	var recorded []error
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 {
+			recorded = append(recorded, c.Errors.Last().Err)
+		}
+	})
+	router.POST("/articles", controller.Create)
+	router.GET("/articles", controller.List)
+
+	requests := []*http.Request{
+		httptest.NewRequest(http.MethodPost, "/articles", strings.NewReader(`{"author_id":"550e8400-e29b-41d4-a716-446655440000","title":"title","body":"body"}`)),
+		httptest.NewRequest(http.MethodGet, "/articles", nil),
+	}
+	for _, request := range requests {
+		response := httptest.NewRecorder()
+		router.ServeHTTP(response, request)
+		if response.Code != http.StatusInternalServerError || !strings.Contains(response.Body.String(), `"internal_error"`) {
+			t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+		}
+		if strings.Contains(response.Body.String(), internalErr.Error()) {
+			t.Fatalf("internal error leaked in response: %s", response.Body.String())
+		}
+	}
+	if len(recorded) != len(requests) {
+		t.Fatalf("recorded errors = %d, want %d", len(recorded), len(requests))
+	}
+	for _, err := range recorded {
+		if !errors.Is(err, internalErr) {
+			t.Fatalf("recorded error = %v, want %v", err, internalErr)
+		}
 	}
 }
 

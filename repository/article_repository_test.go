@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/bootstrap"
-	"github.com/SeladaKeju/article-service.git/domain"
+	"github.com/SeladaKeju/article-service/bootstrap"
+	"github.com/SeladaKeju/article-service/domain"
 )
 
 func TestArticleRepositoryCreatePersistsArticle(t *testing.T) {

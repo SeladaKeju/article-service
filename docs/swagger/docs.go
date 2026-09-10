@@ -66,7 +66,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/controller.ErrorDetail"
+                            "$ref": "#/definitions/controller.InternalErrorDetail"
                         }
                     }
                 }
@@ -109,7 +109,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/controller.ErrorDetail"
+                            "$ref": "#/definitions/controller.InternalErrorDetail"
                         }
                     }
                 }
@@ -127,6 +127,19 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "request must contain author_id, title, and body"
+                }
+            }
+        },
+        "controller.InternalErrorDetail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "internal_error"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "An internal error occurred"
                 }
             }
         },

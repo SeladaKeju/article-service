@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SeladaKeju/article-service.git/api/controller"
-	"github.com/SeladaKeju/article-service.git/api/middleware"
+	"github.com/SeladaKeju/article-service/api/controller"
+	"github.com/SeladaKeju/article-service/api/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"

@@ -9,6 +9,15 @@ definitions:
         example: request must contain author_id, title, and body
         type: string
     type: object
+  controller.InternalErrorDetail:
+    properties:
+      code:
+        example: internal_error
+        type: string
+      message:
+        example: An internal error occurred
+        type: string
+    type: object
   controller.ListArticlesMeta:
     properties:
       next_cursor:
@@ -81,7 +90,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/controller.ErrorDetail'
+            $ref: '#/definitions/controller.InternalErrorDetail'
       summary: List articles
       tags:
       - articles
@@ -109,7 +118,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/controller.ErrorDetail'
+            $ref: '#/definitions/controller.InternalErrorDetail'
       summary: Create an article
       tags:
       - articles

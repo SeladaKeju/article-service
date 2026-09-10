@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/SeladaKeju/article-service.git/domain"
+	"github.com/SeladaKeju/article-service/domain"
 )
 
 // ArticleRepository implements domain.ArticleRepository with PostgreSQL.
